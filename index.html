@@ -28,21 +28,25 @@
   <div id="g_id_onload"
        data-client_id="102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com"
        data-context="signin"
-       data-ux_mode="popup">
+       data-ux_mode="popup"
+       data-callback="handleCredentialResponse">
   </div>
 
   <div class="g_id_signin" data-type="standard"></div>
 
   <script>
-    // เช็คสถานะการล็อกอิน
+    // ฟังก์ชันตรวจสอบสถานะการล็อกอินของ Google
     window.onload = function() {
-      const userData = sessionStorage.getItem('userData');
-      if (userData) {
-        console.log('Redirecting to home.html because user is logged in');
-        window.location.href = "home.html"; // ถ้าผู้ใช้ล็อกอินแล้ว ไปที่หน้า Home
-      }
+      google.accounts.id.initialize({
+        client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
+        callback: handleCredentialResponse
+      });
+
+      // ตรวจสอบสถานะการล็อกอิน
+      google.accounts.id.prompt(); // หากมีการล็อกอินอยู่แล้ว มันจะให้ข้อมูล
     }
 
+    // ฟังก์ชันที่ใช้ในการจัดการข้อมูลเมื่อผู้ใช้ล็อกอินสำเร็จ
     function handleCredentialResponse(response) {
       const data = parseJwt(response.credential);
       console.log("User Data:", data);
