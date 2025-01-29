@@ -66,21 +66,25 @@
   <div class="login-container">
     <h1>เข้าสู่ระบบด้วย Google</h1>
     <!-- ปุ่ม Custom -->
-    <button class="custom-google-btn" onclick="handleSignIn()">
+    <button class="custom-google-btn" id="googleSignInBtn">
       <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo">
       ลงชื่อเข้าใช้ด้วย Google
     </button>
   </div>
 
   <script>
-    function handleSignIn() {
-      google.accounts.id.initialize({
-        client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
-        callback: handleCredentialResponse,
-      });
-      google.accounts.id.prompt(); // แสดง popup การล็อกอิน
-    }
+    // เริ่มต้น Google API
+    google.accounts.id.initialize({
+      client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
+      callback: handleCredentialResponse, // ฟังก์ชันที่เรียกเมื่อเข้าสู่ระบบสำเร็จ
+    });
 
+    // ฟังก์ชันจัดการปุ่มเข้าสู่ระบบ
+    document.getElementById('googleSignInBtn').addEventListener('click', function() {
+      google.accounts.id.prompt(); // เปิด Popup การเข้าสู่ระบบ
+    });
+
+    // ฟังก์ชัน Callback สำหรับจัดการข้อมูลหลังเข้าสู่ระบบ
     function handleCredentialResponse(response) {
       const data = parseJwt(response.credential);
       console.log("User Data:", data);
@@ -96,9 +100,12 @@
     function parseJwt(token) {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join(''));
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
       return JSON.parse(jsonPayload);
     }
   </script>
