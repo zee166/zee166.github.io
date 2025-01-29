@@ -32,7 +32,7 @@
       color: #ffffff;
     }
     
-    /* ปรับแต่งปุ่ม */
+    /* ปุ่ม Google Sign-In */
     .google-login {
       display: flex;
       align-items: center;
@@ -47,6 +47,7 @@
       cursor: pointer;
       transition: background 0.3s ease-in-out;
       box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2);
+      width: 100%;
     }
     .google-login:hover {
       background-color: #e0e0e0;
@@ -62,37 +63,31 @@
   <div class="login-container">
     <h1>เข้าสู่ระบบด้วย Google</h1>
 
-    <!-- ปุ่ม Custom -->
-    <button class="google-login" onclick="signInWithGoogle()">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google Logo">
-      ลงชื่อเข้าใช้ด้วย Google
-    </button>
+    <!-- ปุ่ม Google Sign-In -->
+    <div id="g_id_onload"
+         data-client_id="102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com"
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleCredentialResponse">
+    </div>
+
+    <!-- ปุ่มที่ทำงานได้จริง -->
+    <div class="g_id_signin" data-type="standard"></div>
   </div>
 
   <script>
-    window.onload = function() {
-      if (localStorage.getItem('userData')) {
-        window.location.href = "home.html";
-      } else {
-        google.accounts.id.initialize({
-          client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
-          callback: handleCredentialResponse
-        });
-      }
-    }
-
-    function signInWithGoogle() {
-      google.accounts.id.prompt();
-    }
-
     function handleCredentialResponse(response) {
       const data = parseJwt(response.credential);
       console.log("User Data:", data);
 
+      // เก็บข้อมูลผู้ใช้ใน localStorage
       localStorage.setItem('userData', JSON.stringify(data));
+
+      // ไปที่หน้า Home เมื่อล็อกอินสำเร็จ
       window.location.href = "home.html";
     }
 
+    // ฟังก์ชันแปลง JWT Token เป็น JSON
     function parseJwt(token) {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
