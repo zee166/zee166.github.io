@@ -6,24 +6,55 @@
   <title>Login with Google</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
+    /* 🌙 ธีมมืด (Dark Mode) */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 50px;
+      background-color: #121212;
+      color: #ffffff;
     }
+
+    h1 {
+      color: #ffffff;
+    }
+
+    .g_id_signin {
+      margin-top: 20px;
+    }
+
     #user-info {
       display: none;
       margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: #1e1e1e;
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
+
+    #user-info img {
+      border-radius: 50%;
+      margin-top: 10px;
+    }
+
     #logout {
       display: none;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
       border: none;
-      background-color: red;
+      background-color: #ff4d4d;
       color: white;
       border-radius: 5px;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+
+    #logout:hover {
+      background-color: #e60000;
     }
   </style>
 </head>
@@ -34,6 +65,7 @@
   <div id="g_id_onload"
        data-client_id="102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com"
        data-context="signin"
+       data-ux_mode="popup"  <!-- ✅ ใช้ popup แทน redirect -->
        data-callback="handleCredentialResponse"
        data-auto_prompt="false">
   </div>
