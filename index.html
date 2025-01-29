@@ -51,8 +51,8 @@
       const data = parseJwt(response.credential);
       console.log("User Data:", data);
 
-      // เก็บข้อมูลผู้ใช้ใน sessionStorage
-      sessionStorage.setItem('userData', JSON.stringify(data));
+      // เก็บข้อมูลผู้ใช้ใน localStorage
+      localStorage.setItem('userData', JSON.stringify(data));
 
       // ไปที่หน้า Home เมื่อล็อกอินสำเร็จ
       window.location.href = "home.html";
