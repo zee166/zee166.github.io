@@ -35,7 +35,13 @@
 
   <script>
     // เช็คสถานะการล็อกอิน
-    let isLoggedIn = false;
+    window.onload = function() {
+      const userData = sessionStorage.getItem('userData');
+      if (userData) {
+        console.log('Redirecting to home.html because user is logged in');
+        window.location.href = "home.html"; // ถ้าผู้ใช้ล็อกอินแล้ว ไปที่หน้า Home
+      }
+    }
 
     function handleCredentialResponse(response) {
       const data = parseJwt(response.credential);
@@ -43,7 +49,6 @@
 
       // เก็บข้อมูลผู้ใช้ใน sessionStorage
       sessionStorage.setItem('userData', JSON.stringify(data));
-      console.log('User data saved in sessionStorage:', sessionStorage.getItem('userData'));
 
       // ไปที่หน้า Home เมื่อล็อกอินสำเร็จ
       window.location.href = "home.html";
@@ -58,14 +63,6 @@
       ).join(''));
       return JSON.parse(jsonPayload);
     }
-
-    window.onload = function() {
-      const userData = sessionStorage.getItem('userData');
-      if (userData) {
-        console.log('Redirecting to home.html because user is logged in');
-        window.location.href = "home.html"; // ถ้าผู้ใช้ล็อกอินแล้ว ไปที่หน้า Home
-      }
-    };
   </script>
 </body>
 </html>
