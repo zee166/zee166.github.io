@@ -66,18 +66,20 @@
   </div>
 
   <script>
-    // ฟังก์ชันตรวจสอบสถานะการล็อกอินของ Google
+    // ตรวจสอบสถานะการล็อกอิน
     window.onload = function() {
-      google.accounts.id.initialize({
-        client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
-        callback: handleCredentialResponse
-      });
-
-      // ตรวจสอบสถานะการล็อกอิน
-      google.accounts.id.prompt(); // หากมีการล็อกอินอยู่แล้ว มันจะให้ข้อมูล
+      // หากมีข้อมูลผู้ใช้ใน localStorage ให้ไปที่หน้า home
+      if (localStorage.getItem('userData')) {
+        window.location.href = "home.html"; // ไปยังหน้า home
+      } else {
+        google.accounts.id.initialize({
+          client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
+          callback: handleCredentialResponse
+        });
+        google.accounts.id.prompt(); // หากมีการล็อกอินอยู่แล้ว มันจะให้ข้อมูล
+      }
     }
 
-    // ฟังก์ชันที่ใช้ในการจัดการข้อมูลเมื่อผู้ใช้ล็อกอินสำเร็จ
     function handleCredentialResponse(response) {
       const data = parseJwt(response.credential);
       console.log("User Data:", data);
