@@ -31,31 +31,19 @@
       font-size: 24px;
       color: #ffffff;
     }
-    
-    /* ปุ่ม Google Sign-In */
-    .google-login {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #ffffff;
-      color: #000;
-      border: none;
-      padding: 12px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s ease-in-out;
-      box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2);
+
+    /* ปรับขนาดปุ่ม Google Sign-In */
+    .g_id_signin {
+      display: inline-block;
       width: 100%;
+      max-width: 350px; /* เพิ่มความกว้างสูงสุด */
+      height: 50px; /* ปรับความสูง */
     }
-    .google-login:hover {
-      background-color: #e0e0e0;
-    }
-    .google-login img {
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
+
+    /* เพิ่มเงาให้ปุ่ม */
+    .g_id_signin button {
+      box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+      border-radius: 10px; /* มุมมน */
     }
   </style>
 </head>
@@ -71,8 +59,7 @@
          data-callback="handleCredentialResponse">
     </div>
 
-    <!-- ปุ่มที่ทำงานได้จริง -->
-    <div class="g_id_signin" data-type="standard"></div>
+    <div class="g_id_signin" data-type="standard" data-size="large"></div>
   </div>
 
   <script>
