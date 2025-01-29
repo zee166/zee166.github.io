@@ -9,30 +9,61 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      margin: 50px;
+      margin: 0;
       background-color: #121212;
       color: #ffffff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    h1 {
+    .login-container {
+      background-color: #1e1e1e;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-container h1 {
+      margin-bottom: 30px;
+      font-size: 24px;
       color: #ffffff;
     }
     .g_id_signin {
       margin-top: 20px;
     }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      background-color: #ff4d4d;
+      color: white;
+      border-radius: 5px;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #e60000;
+    }
   </style>
 </head>
 <body>
-  <h1>เข้าสู่ระบบด้วย Google</h1>
+  <div class="login-container">
+    <h1>เข้าสู่ระบบด้วย Google</h1>
 
-  <!-- Google Sign-In Button -->
-  <div id="g_id_onload"
-       data-client_id="102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com"
-       data-context="signin"
-       data-ux_mode="popup"
-       data-callback="handleCredentialResponse">
+    <!-- Google Sign-In Button -->
+    <div id="g_id_onload"
+         data-client_id="102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com"
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleCredentialResponse">
+    </div>
+
+    <div class="g_id_signin" data-type="standard"></div>
   </div>
-
-  <div class="g_id_signin" data-type="standard"></div>
 
   <script>
     // ฟังก์ชันตรวจสอบสถานะการล็อกอินของ Google
