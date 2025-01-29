@@ -1,37 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home - Login with Google</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <title>หน้าแรก</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 50px;
       background-color: #121212;
       color: #ffffff;
-    }
-    h1 {
-      color: #ffffff;
+      text-align: center;
+      padding: 50px;
     }
     #user-info {
-      display: block;
       margin-top: 20px;
-      padding: 20px;
-      border-radius: 10px;
-      background-color: #1e1e1e;
-      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
     }
-    #user-info img {
-      border-radius: 50%;
-      margin-top: 10px;
-    }
-    #logout {
+    button {
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
@@ -42,64 +26,36 @@
       margin-top: 20px;
       transition: background 0.3s;
     }
-    #logout:hover {
+    button:hover {
       background-color: #e60000;
-    }
-    .time-display {
-      font-size: 14px;
-      margin-top: 10px;
-      color: #aaa;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to the Home Page</h1>
-
+  <h1>ยินดีต้อนรับ, <span id="user-name"></span>!</h1>
   <div id="user-info">
-    <h2>Welcome, <span id="user-name"></span>!</h2>
-    <img id="user-pic" src="" alt="Profile Picture" width="100">
-    <p id="user-email"></p>
-    <div id="time-display" class="time-display"></div>
+    <img id="user-pic" src="" alt="ภาพโปรไฟล์" width="100">
   </div>
 
-  <button id="logout">Logout</button>
+  <button id="logout">ออกจากระบบ</button>
 
   <script>
+    // ตรวจสอบสถานะการล็อกอิน
     window.onload = function() {
-      const userData = localStorage.getItem('userData');
-      if (!userData) {
-        console.log('Redirecting to index.html because no user data found');
-        window.location.href = "index.html"; // ถ้าไม่ได้ล็อกอิน กลับไปที่หน้า Login
-        return;
+      if (!localStorage.getItem('userData')) {
+        window.location.href = "index.html"; // ถ้ายังไม่ล็อกอิน ให้ไปหน้า login
+      } else {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        document.getElementById("user-name").textContent = userData.name;
+        document.getElementById("user-pic").src = userData.picture;
       }
-
-      const data = JSON.parse(userData);
-      document.getElementById("user-name").textContent = data.name;
-      document.getElementById("user-pic").src = data.picture;
-      document.getElementById("user-email").textContent = data.email;
-
-      updateTime();
-      setInterval(updateTime, 1000); // อัพเดทเวลาในทุกๆ 1 วินาที
-    };
-
-    function updateTime() {
-      const now = new Date();
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        hour12: true 
-      };
-      document.getElementById("time-display").textContent = now.toLocaleString('en-US', options);
     }
 
-    document.getElementById("logout").addEventListener("click", () => {
+    // ปุ่ม Logout
+    document.getElementById("logout").addEventListener("click", function() {
+      // ลบข้อมูลผู้ใช้ใน localStorage และไปที่หน้า login
       localStorage.removeItem('userData');
-      window.location.href = "index.html"; // เมื่อออกจากระบบ ไปที่หน้า Login
+      window.location.href = "index.html";
     });
   </script>
 </body>
