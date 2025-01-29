@@ -67,8 +67,6 @@
   <script>
     window.onload = function() {
       const userData = sessionStorage.getItem('userData');
-      console.log('User Data on Home page:', userData);
-
       if (!userData) {
         console.log('Redirecting to index.html because no user data found');
         window.location.href = "index.html"; // ถ้าไม่ได้ล็อกอิน กลับไปที่หน้า Login
