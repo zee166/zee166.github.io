@@ -66,7 +66,7 @@
 
   <script>
     window.onload = function() {
-      const userData = sessionStorage.getItem('userData');
+      const userData = localStorage.getItem('userData');
       if (!userData) {
         console.log('Redirecting to index.html because no user data found');
         window.location.href = "index.html"; // ถ้าไม่ได้ล็อกอิน กลับไปที่หน้า Login
@@ -98,7 +98,7 @@
     }
 
     document.getElementById("logout").addEventListener("click", () => {
-      sessionStorage.removeItem('userData');
+      localStorage.removeItem('userData');
       window.location.href = "index.html"; // เมื่อออกจากระบบ ไปที่หน้า Login
     });
   </script>
