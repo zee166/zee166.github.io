@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home - Login with Google</title>
+  <title>Login with Google</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    /* 🌙 ธีมมืด (Dark Mode) */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -21,23 +20,6 @@
 
     .g_id_signin {
       margin-top: 20px;
-    }
-
-    #user-info {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      border-radius: 10px;
-      background-color: #1e1e1e;
-      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    #user-info img {
-      border-radius: 50%;
-      margin-top: 10px;
     }
 
     #logout {
@@ -56,21 +38,6 @@
     #logout:hover {
       background-color: #e60000;
     }
-
-    /* หน้า Home */
-    #home {
-      display: none;
-      padding: 20px;
-      background-color: #2c2c2c;
-      border-radius: 10px;
-      margin-top: 20px;
-    }
-
-    .time-display {
-      font-size: 14px;
-      margin-top: 10px;
-      color: #aaa;
-    }
   </style>
 </head>
 <body>
@@ -85,43 +52,19 @@
 
   <div class="g_id_signin" data-type="standard"></div>
 
-  <button id="logout">Logout</button>
-
-  <div id="user-info">
-    <h2>Welcome, <span id="user-name"></span>!</h2>
-    <img id="user-pic" src="" alt="Profile Picture" width="100">
-    <p id="user-email"></p>
-    <div id="time-display" class="time-display"></div>
-  </div>
-
-  <div id="home">
-    <h2>Welcome to the Home Page</h2>
-    <p>This is a secure page. Only logged-in users can see this content.</p>
-  </div>
-
   <script>
+    // เช็คสถานะการล็อกอิน
     let isLoggedIn = false;
 
     function handleCredentialResponse(response) {
-      // Decode JWT token เพื่อดึงข้อมูลผู้ใช้
       const data = parseJwt(response.credential);
       console.log("User Data:", data);
 
-      // แสดงข้อมูลผู้ใช้
-      document.getElementById("user-name").textContent = data.name;
-      document.getElementById("user-pic").src = data.picture;
-      document.getElementById("user-email").textContent = data.email;
-      document.getElementById("user-info").style.display = "block";
-      document.getElementById("home").style.display = "block"; // เปิดหน้า Home หลังจากล็อกอินสำเร็จ
+      // เก็บข้อมูลผู้ใช้ใน sessionStorage
+      sessionStorage.setItem('userData', JSON.stringify(data));
 
-      // ซ่อนปุ่ม Login และแสดงปุ่ม Logout
-      document.querySelector(".g_id_signin").style.display = "none";
-      document.getElementById("logout").style.display = "inline-block";
-      isLoggedIn = true;
-
-      // แสดงเวลาและวันที่
-      updateTime();
-      setInterval(updateTime, 1000); // อัพเดทเวลาในทุกๆ 1 วินาที
+      // ไปที่หน้า Home เมื่อล็อกอินสำเร็จ
+      window.location.href = "home.html";
     }
 
     // ฟังก์ชันแปลง JWT Token เป็น JSON
@@ -134,42 +77,11 @@
       return JSON.parse(jsonPayload);
     }
 
-    // ฟังก์ชันแสดงเวลาและวันที่
-    function updateTime() {
-      const now = new Date();
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        hour12: true 
-      };
-      document.getElementById("time-display").textContent = now.toLocaleString('en-US', options);
-    }
-
-    // ปุ่ม Logout
-    document.getElementById("logout").addEventListener("click", () => {
-      document.getElementById("user-info").style.display = "none";
-      document.getElementById("home").style.display = "none";
-      document.querySelector(".g_id_signin").style.display = "block";
-      document.getElementById("logout").style.display = "none";
-      isLoggedIn = false;
-    });
-
-    // ฟังก์ชันเช็คการล็อกอิน
-    function checkLogin() {
-      if (!isLoggedIn) {
-        alert("คุณต้องเข้าสู่ระบบก่อนถึงจะเข้าถึงหน้านี้ได้!");
-        window.location.href = "index.html"; // กลับไปที่หน้า Login
+    window.onload = function() {
+      if (sessionStorage.getItem('userData')) {
+        window.location.href = "home.html"; // ถ้าผู้ใช้ล็อกอินแล้ว ไปที่หน้า Home
       }
-    }
-
-    // ใช้ฟังก์ชัน checkLogin() ในการป้องกันการเข้าถึงหน้าอื่น ๆ
-    window.onload = checkLogin; // ตรวจสอบเมื่อโหลดหน้า
-
+    };
   </script>
 </body>
 </html>
