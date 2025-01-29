@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Login with Google</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     body {
@@ -13,30 +13,11 @@
       background-color: #121212;
       color: #ffffff;
     }
-
     h1 {
       color: #ffffff;
     }
-
     .g_id_signin {
       margin-top: 20px;
-    }
-
-    #logout {
-      display: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      background-color: #ff4d4d;
-      color: white;
-      border-radius: 5px;
-      margin-top: 20px;
-      transition: background 0.3s;
-    }
-
-    #logout:hover {
-      background-color: #e60000;
     }
   </style>
 </head>
@@ -62,6 +43,7 @@
 
       // เก็บข้อมูลผู้ใช้ใน sessionStorage
       sessionStorage.setItem('userData', JSON.stringify(data));
+      console.log('User data saved in sessionStorage:', sessionStorage.getItem('userData'));
 
       // ไปที่หน้า Home เมื่อล็อกอินสำเร็จ
       window.location.href = "home.html";
@@ -78,7 +60,9 @@
     }
 
     window.onload = function() {
-      if (sessionStorage.getItem('userData')) {
+      const userData = sessionStorage.getItem('userData');
+      if (userData) {
+        console.log('Redirecting to home.html because user is logged in');
         window.location.href = "home.html"; // ถ้าผู้ใช้ล็อกอินแล้ว ไปที่หน้า Home
       }
     };
