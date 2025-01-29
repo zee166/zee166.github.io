@@ -13,11 +13,9 @@
       background-color: #121212;
       color: #ffffff;
     }
-
     h1 {
       color: #ffffff;
     }
-
     #user-info {
       display: block;
       margin-top: 20px;
@@ -29,12 +27,10 @@
       margin-left: auto;
       margin-right: auto;
     }
-
     #user-info img {
       border-radius: 50%;
       margin-top: 10px;
     }
-
     #logout {
       padding: 10px 20px;
       font-size: 16px;
@@ -46,11 +42,9 @@
       margin-top: 20px;
       transition: background 0.3s;
     }
-
     #logout:hover {
       background-color: #e60000;
     }
-
     .time-display {
       font-size: 14px;
       margin-top: 10px;
@@ -71,20 +65,21 @@
   <button id="logout">Logout</button>
 
   <script>
-    // เช็คว่า userData มีใน sessionStorage หรือไม่
     window.onload = function() {
       const userData = sessionStorage.getItem('userData');
+      console.log('User Data on Home page:', userData);
+
       if (!userData) {
+        console.log('Redirecting to index.html because no user data found');
         window.location.href = "index.html"; // ถ้าไม่ได้ล็อกอิน กลับไปที่หน้า Login
+        return;
       }
 
-      // แสดงข้อมูลผู้ใช้
       const data = JSON.parse(userData);
       document.getElementById("user-name").textContent = data.name;
       document.getElementById("user-pic").src = data.picture;
       document.getElementById("user-email").textContent = data.email;
 
-      // แสดงเวลา
       updateTime();
       setInterval(updateTime, 1000); // อัพเดทเวลาในทุกๆ 1 วินาที
     };
@@ -104,7 +99,6 @@
       document.getElementById("time-display").textContent = now.toLocaleString('en-US', options);
     }
 
-    // ปุ่ม Logout
     document.getElementById("logout").addEventListener("click", () => {
       sessionStorage.removeItem('userData');
       window.location.href = "index.html"; // เมื่อออกจากระบบ ไปที่หน้า Login
