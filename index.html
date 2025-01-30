@@ -5,55 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>เข้าสู่ระบบด้วย Google</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.25/jsrsasign-all-min.js"></script>
   <style>
-    /* CSS เดิม */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      background-color: #121212;
+      color: #ffffff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-container {
+      background-color: #1e1e1e;
+      padding: 40px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-container h1 {
+      margin-bottom: 30px;
+      font-size: 24px;
+      color: #ffffff;
+    }
+    .g_id_signin {
+      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+    }
+    .g_id_signin div {
+      width: 100% !important;
+      border-radius: 5px !important;
+      transition: all 0.3s ease !important;
+    }
+    .g_id_signin div:hover {
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
+      transform: scale(1.02) !important;
+    }
   </style>
 </head>
 <body>
   <div class="login-container">
     <h1>เข้าสู่ระบบด้วย Google</h1>
-    <div id="googleSignInBtn"></div>
+
+    <!-- Google Sign-In Button -->
+    <div id="g_id_onload"
+         data-client_id="102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com"
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleCredentialResponse">
+    </div>
+
+    <div class="g_id_signin" data-type="standard"></div>
   </div>
 
   <script>
-    google.accounts.id.initialize({
-      client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
-      callback: handleCredentialResponse,
-      login_uri: "https://zee166.github.io", // ใส่ URL จริง
-      ux_mode: "popup"
-    });
-
-    function handleCredentialResponse(response) {
-      try {
-        if (response.error) {
-          throw new Error(response.error);
-        }
-        
-        const data = JSON.parse(decodeURIComponent(escape(
-          atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
-        )));
-
-        console.log("User Data:", data);
-        localStorage.setItem('userData', JSON.stringify(data));
+    // ตรวจสอบสถานะการล็อกอิน
+    window.onload = function() {
+      if (localStorage.getItem('userData')) {
         window.location.href = "home.html";
-      } catch (error) {
-        console.error("Login Error:", error);
-        alert("เกิดข้อผิดพลาดในการเข้าสู่ระบบ: " + error.message);
+      } else {
+        google.accounts.id.initialize({
+          client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
+          callback: handleCredentialResponse
+        });
+        google.accounts.id.prompt();
       }
     }
 
-    // Render ปุ่ม Google อย่างถูกต้อง
-    google.accounts.id.renderButton(
-      document.getElementById("googleSignInBtn"),
-      {
-        type: "icon",
-        theme: "filled_blue",
-        size: "large",
-        text: "signin_with",
-        shape: "circle"
-      }
-    );
+    function handleCredentialResponse(response) {
+      const data = parseJwt(response.credential);
+      localStorage.setItem('userData', JSON.stringify(data));
+      window.location.href = "home.html";
+    }
+
+    function parseJwt(token) {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join(''));
+      return JSON.parse(jsonPayload);
+    }
   </script>
 </body>
 </html>
