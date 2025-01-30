@@ -6,89 +6,160 @@
   <title>เข้าสู่ระบบด้วย Google</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
+    /* ระบบสีแบบใหม่ */
+    :root {
+      --primary-bg: #1a1a1a;
+      --secondary-bg: #2d2d2d;
+      --accent-color: #4285f4;
+      --text-primary: #ffffff;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
+      font-family: 'Segoe UI', Arial, sans-serif;
       margin: 0;
-      background-color: #121212;
-      color: #ffffff;
-      height: 100vh;
+      background: linear-gradient(135deg, #0a0a0a, #1e1e1e);
+      color: var(--text-primary);
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
     }
+
     .login-container {
-      background-color: #1e1e1e;
-      padding: 40px 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
+      background: var(--primary-bg);
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 380px;
+      transition: transform 0.3s ease;
     }
-    .login-container h1 {
-      margin-bottom: 30px;
-      font-size: 24px;
-      color: #ffffff;
+
+    .login-container:hover {
+      transform: translateY(-5px);
     }
+
+    h1 {
+      margin: 0 0 2rem 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
     .g_id_signin {
-      margin: 20px 0;
-      display: flex;
-      justify-content: center;
+      margin: 1.5rem 0;
+      position: relative;
     }
+
     .g_id_signin div {
       width: 100% !important;
-      border-radius: 5px !important;
-      transition: all 0.3s ease !important;
+      border-radius: 8px !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
+
     .g_id_signin div:hover {
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
-      transform: scale(1.02) !important;
+      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.25) !important;
+      border-color: var(--accent-color) !important;
+      background: rgba(66, 133, 244, 0.05) !important;
+    }
+
+    /* โหลดดิ้งแอนิเมชัน */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <div class="login-container">
     <h1>เข้าสู่ระบบด้วย Google</h1>
-
-    <!-- Google Sign-In Button -->
+    
     <div id="g_id_onload"
          data-client_id="102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com"
          data-context="signin"
          data-ux_mode="popup"
          data-callback="handleCredentialResponse">
     </div>
-
+    
     <div class="g_id_signin" data-type="standard"></div>
   </div>
 
+  <!-- โหลดดิ้ง overlay -->
+  <div class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
   <script>
-    // ตรวจสอบสถานะการล็อกอิน
+    // เพิ่มการจัดการสถานะโหลดดิ้ง
+    const loadingOverlay = document.querySelector('.loading-overlay')
+    
     window.onload = function() {
       if (localStorage.getItem('userData')) {
-        window.location.href = "home.html";
+        window.location.href = "home.html"
       } else {
         google.accounts.id.initialize({
           client_id: "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com",
           callback: handleCredentialResponse
-        });
-        google.accounts.id.prompt();
+        })
+        google.accounts.id.renderButton(
+          document.querySelector('.g_id_signin'),
+          { theme: "filled_blue", size: "large" }
+        )
       }
     }
 
-    function handleCredentialResponse(response) {
-      const data = parseJwt(response.credential);
-      localStorage.setItem('userData', JSON.stringify(data));
-      window.location.href = "home.html";
+    async function handleCredentialResponse(response) {
+      showLoading()
+      try {
+        const data = parseJwt(response.credential)
+        localStorage.setItem('userData', JSON.stringify(data))
+        await new Promise(resolve => setTimeout(resolve, 1500)) // ดีเลย์สำหรับเอฟเฟกต์
+        window.location.href = "home.html"
+      } catch (error) {
+        console.error('Login error:', error)
+        hideLoading()
+      }
     }
 
     function parseJwt(token) {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
       const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
         '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join(''));
-      return JSON.parse(jsonPayload);
+      ).join(''))
+      return JSON.parse(jsonPayload)
+    }
+
+    // ฟังก์ชันควบคุมโหลดดิ้ง
+    function showLoading() {
+      loadingOverlay.style.display = 'flex'
+    }
+
+    function hideLoading() {
+      loadingOverlay.style.display = 'none'
     }
   </script>
 </body>
