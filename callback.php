@@ -3,7 +3,7 @@ session_start();
 
 $client_id = "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com";
 $client_secret = "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";
-$redirect_uri = "http://localhost/callback.php";
+$redirect_uri = "https://zee166.github.io/callback.php";
 
 if (!isset($_GET['code'])) {
     die("Authorization code not received.");
