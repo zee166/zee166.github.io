@@ -2,7 +2,7 @@
 session_start();
 
 $client_id = "102756817810-k9nr640vehnr3il0rt2sfl98v1ej773s.apps.googleusercontent.com";
-$redirect_uri = "http://localhost/callback.php";
+$redirect_uri = "https://zee166.github.io/callback.php";
 
 $auth_url = "https://accounts.google.com/o/oauth2/auth?" . http_build_query([
     "response_type" => "code",
