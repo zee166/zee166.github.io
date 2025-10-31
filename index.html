@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>คัดลอกข้อความ VMESS</title>
+  <style>
+    :root {
+      --bg:#f5f8f7;
+      --card:#ffffff;
+      --accent:#157a5f;
+      --muted:#556b63;
+    }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial;
+      background: var(--bg);
+      margin: 0;
+      padding: 24px;
+      color: #123326;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      max-width: 900px;
+      margin: 24px auto;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(10,30,20,0.06);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+    }
+    p.lead {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+    textarea#content {
+      width: 100%;
+      min-height: 160px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e6ece8;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+      background: #fbfff9;
+      white-space: pre-wrap;
+      overflow: auto;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.secondary {
+      background: #e9f6f1;
+      color: var(--accent);
+      border: 1px solid #cfe7da;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .msg {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      background: #fffef6;
+      border: 1px solid #f1e8cf;
+      color: #6b5a2a;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" role="main" aria-labelledby="title">
+      <h1 id="title">เครื่องมือคัดลอกข้อความ VMESS</h1>
+      <p class="lead">กดปุ่มด้านล่างเพื่อคัดลอกหรือดาวน์โหลดเป็นไฟล์ .txt</p>
+
+      <textarea id="content" aria-label="ข้อความ VMESS" spellcheck="false">vmess://eyJwYXRoIjoiXC9WSVBfQUlTUExBWSIsInNlZWQiOiIiLCJ0bHMiOiJub25lIiwibmV0Ijoid3MiLCJkZXZpY2VJRCI6IiIsInYiOiIyIiwicHMiOiJBSVMt4LiB4Lix4LiZ4Lij4Lix4LmI4Lin4LmA4Lie4Li14Lii4LinLUVYUDowMy0xMS02OCIsImFscG4iOiIiLCJzZXJ2aWNlTmFtZSI6Im5vbmUiLCJtb2RlIjoiIiwiZnJhZ21lbnQiOiIiLCJleHRyYSI6IiIsImFkZCI6InNwZWVkdGVzdC5uZXQudGlrdnBuNi50aWtpbnRlcm5ldC5jb20iLCJob3N0IjoiVGlrdnBuLlNwZWVkdGVzdC5uZXQiLCJpZCI6IjQ5NDdhZDBkLTYxZWYtNGQ4Ni1hMjg1LTlkNzgyZWY1ZjIwMCIsImFpZCI6IjAiLCJ0eXBlIjoibm9uZSIsInNuaSI6IiIsImZwIjoiIiwiaGVhZGVyVHlwZSI6IiIsInBvcnQiOiI4MDgwIn0=</textarea>
+
+      <div class="controls" role="group" aria-label="controls">
+        <button id="btnCopy">คัดลอกไปยังคลิปบอร์ด</button>
+        <button id="btnSelect" class="secondary">เลือกทั้งหมด</button>
+        <button id="btnDownload" class="secondary">ดาวน์โหลดเป็น .txt</button>
+      </div>
+
+      <div id="msg" class="msg" role="status" aria-live="polite"></div>
+      <p class="hint">💡 ใช้คีย์ลัด <b>Ctrl + Shift + C</b> เพื่อคัดลอกอย่างรวดเร็ว</p>
+    </div>
+  </div>
+
+  <script>
+    const ta = document.getElementById('content');
+    const msg = document.getElementById('msg');
+
+    function showMessage(text, time = 3000) {
+      msg.textContent = text;
+      msg.style.display = 'block';
+      clearTimeout(showMessage.timer);
+      showMessage.timer = setTimeout(() => (msg.style.display = 'none'), time);
+    }
+
+    async function copyText(text) {
+      if (!text) throw new Error('ไม่มีข้อความให้คัดลอก');
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      document.body.removeChild(area);
+    }
+
+    document.getElementById('btnCopy').addEventListener('click', async () => {
+      try {
+        await copyText(ta.value);
+        showMessage('คัดลอกข้อความสำเร็จ ✅');
+      } catch (err) {
+        alert('คัดลอกไม่สำเร็จ: ' + err.message);
+      }
+    });
+
+    document.getElementById('btnSelect').addEventListener('click', () => {
+      ta.focus();
+      ta.select();
+      showMessage('เลือกข้อความทั้งหมดแล้ว 📋');
+    });
+
+    document.getElementById('btnDownload').addEventListener('click', () => {
+      const blob = new Blob([ta.value], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vmess.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+      showMessage('ดาวน์โหลด vmess.txt แล้ว 💾');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        document.getElementById('btnCopy').click();
+      }
+    });
+  </script>
+</body>
+</html>
