@@ -1,172 +1,204 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>คัดลอกข้อความ VMESS</title>
-  <style>
-    :root {
-      --bg:#f5f8f7;
-      --card:#ffffff;
-      --accent:#157a5f;
-      --muted:#556b63;
-    }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial;
-      background: var(--bg);
-      margin: 0;
-      padding: 24px;
-      color: #123326;
-      -webkit-font-smoothing: antialiased;
-    }
-    .container {
-      max-width: 900px;
-      margin: 24px auto;
-    }
-    .card {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 18px;
-      box-shadow: 0 6px 18px rgba(10,30,20,0.06);
-    }
-    h1 {
-      margin: 0 0 8px;
-      font-size: 1.15rem;
-    }
-    p.lead {
-      margin: 0 0 12px;
-      color: var(--muted);
-    }
-    textarea#content {
-      width: 100%;
-      min-height: 160px;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #e6ece8;
-      resize: vertical;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
-      background: #fbfff9;
-      white-space: pre-wrap;
-      overflow: auto;
-    }
-    .controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
-    button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    button.secondary {
-      background: #e9f6f1;
-      color: var(--accent);
-      border: 1px solid #cfe7da;
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .hint {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-    .msg {
-      margin-top: 10px;
-      padding: 8px;
-      border-radius: 8px;
-      background: #fffef6;
-      border: 1px solid #f1e8cf;
-      color: #6b5a2a;
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Discord Webhook Tester & Device Simulator</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f9; }
+        h2 { color: #333; border-bottom: 2px solid #7289da; padding-bottom: 10px; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+        input[type="number"], input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .control-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+        .control-buttons button { padding: 12px 15px; margin-top: 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-manual { background-color: #7289da; color: white; }
+        .btn-outage { background-color: #ff4500; color: white; }
+        .btn-normal { background-color: #3cb371; color: white; }
+        .btn-abnormal { background-color: #dc3545; color: white; }
+        #responseMessage { margin-top: 20px; padding: 15px; border: 1px solid #ccc; white-space: pre-wrap; border-radius: 4px; }
+        .form-section { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
+        h3 { margin-top: 0; color: #7289da; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card" role="main" aria-labelledby="title">
-      <h1 id="title">เครื่องมือคัดลอกข้อความ VMESS</h1>
-      <p class="lead">กดปุ่มด้านล่างเพื่อคัดลอกหรือดาวน์โหลดเป็นไฟล์ .txt</p>
+    <h2>⚡ Discord Webhook Simulator & Control Panel</h2>
 
-      <textarea id="content" aria-label="ข้อความ VMESS" spellcheck="false">vmess://eyJwYXRoIjoiXC9WSVBfQUlTUExBWSIsInNlZWQiOiIiLCJ0bHMiOiJub25lIiwibmV0Ijoid3MiLCJkZXZpY2VJRCI6IiIsInYiOiIyIiwicHMiOiJBSVMt4LiB4Lix4LiZ4Lij4Lix4LmI4Lin4LmA4Lie4Li14Lii4LinLUVYUDowMy0xMS02OCIsImFscG4iOiIiLCJzZXJ2aWNlTmFtZSI6Im5vbmUiLCJtb2RlIjoiIiwiZnJhZ21lbnQiOiIiLCJleHRyYSI6IiIsImFkZCI6InNwZWVkdGVzdC5uZXQudGlrdnBuNi50aWtpbnRlcm5ldC5jb20iLCJob3N0IjoiVGlrdnBuLlNwZWVkdGVzdC5uZXQiLCJpZCI6IjQ5NDdhZDBkLTYxZWYtNGQ4Ni1hMjg1LTlkNzgyZWY1ZjIwMCIsImFpZCI6IjAiLCJ0eXBlIjoibm9uZSIsInNuaSI6IiIsImZwIjoiIiwiaGVhZGVyVHlwZSI6IiIsInBvcnQiOiI4MDgwIn0=</textarea>
+    <div class="form-section">
+        <h3>1. การตั้งค่าหลัก</h3>
+        <label for="webhookUrl">Discord Webhook URL:</label>
+        <input type="text" id="webhookUrl" placeholder="ใส่ Discord Webhook URL ของคุณ" required>
 
-      <div class="controls" role="group" aria-label="controls">
-        <button id="btnCopy">คัดลอกไปยังคลิปบอร์ด</button>
-        <button id="btnSelect" class="secondary">เลือกทั้งหมด</button>
-        <button id="btnDownload" class="secondary">ดาวน์โหลดเป็น .txt</button>
-      </div>
-
-      <div id="msg" class="msg" role="status" aria-live="polite"></div>
-      <p class="hint">💡 ใช้คีย์ลัด <b>Ctrl + Shift + C</b> เพื่อคัดลอกอย่างรวดเร็ว</p>
+        <label for="wattThreshold">เกณฑ์กำลังไฟฟ้าสูงสุด (วัตต์ - W Threshold):</label>
+        <input type="number" id="wattThreshold" value="2500" required>
     </div>
-  </div>
 
-  <script>
-    const ta = document.getElementById('content');
-    const msg = document.getElementById('msg');
+    <div class="form-section">
+        <h3>2. รายงานและแจ้งเตือนตามสถานะกระแสไฟ (Manual Test)</h3>
+        <label for="voltageValue">แรงดันไฟฟ้า (โวลต์ - V):</label>
+        <input type="number" id="voltageValue" value="220" step="0.01" required>
 
-    function showMessage(text, time = 3000) {
-      msg.textContent = text;
-      msg.style.display = 'block';
-      clearTimeout(showMessage.timer);
-      showMessage.timer = setTimeout(() => (msg.style.display = 'none'), time);
-    }
+        <label for="currentValue">กระแสไฟฟ้า (แอมป์ - A):</label>
+        <input type="number" id="currentValue" value="10.5" step="0.01" required>
+        
+        <div class="control-buttons">
+            <button class="btn-manual" onclick="sendPowerNotification('Manual Test')">กด TEST สถานะปัจจุบัน</button>
+            <button class="btn-manual" onclick="sendPowerNotification('Auto Report')">จำลอง: รายงานอัตโนมัติ (ตามค่าด้านบน)</button>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>3. จำลองสถานะอุปกรณ์ (Quick Test)</h3>
+        <div class="control-buttons">
+            <h4>🟢 สถานะปกติ (ใช้ไฟไม่เกินเกณฑ์ 2500W)</h4>
+            <button class="btn-normal" onclick="simulateDevice('เครื่องปรับอากาศ', 220, 8.0)">แอร์ทำงาน (1760W)</button>
+            <button class="btn-normal" onclick="simulateDevice('เครื่องทำน้ำอุ่น', 220, 9.5)">น้ำอุ่นทำงาน (2090W)</button>
+            <button class="btn-normal" onclick="simulateDevice('เตารีด', 220, 5.0)">เตารีดทำงาน (1100W)</button>
 
-    async function copyText(text) {
-      if (!text) throw new Error('ไม่มีข้อความให้คัดลอก');
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        return;
-      }
-      const area = document.createElement('textarea');
-      area.value = text;
-      area.style.position = 'fixed';
-      area.style.left = '-9999px';
-      document.body.appendChild(area);
-      area.select();
-      document.execCommand('copy');
-      document.body.removeChild(area);
-    }
+            <h4>🔴 สถานะไม่ปกติ (ใช้ไฟเกินเกณฑ์ 2500W)</h4>
+            <button class="btn-abnormal" onclick="simulateDevice('เครื่องเชื่อม', 220, 15.0)">เครื่องเชื่อม (3300W)</button>
+            <button class="btn-abnormal" onclick="simulateDevice('ช็อต/โหลดเกิน', 220, 12.0)">โหลดเกิน (2640W)</button>
+            <button class="btn-abnormal" onclick="simulateDevice('มอเตอร์สตาร์ท', 220, 18.0)">มอเตอร์สตาร์ท (3960W)</button>
+        </div>
+    </div>
+    
+    <div class="form-section">
+        <h3>4. แจ้งเตือนเหตุการณ์ฉุกเฉิน</h3>
+        <label for="outageType">สถานะไฟดับ:</label>
+        <select id="outageType">
+            <option value="OUTAGE">ไฟดับ/Power Off</option>
+            <option value="RESTORE">ไฟกลับมา/Power Restored</option>
+        </select>
+        <div class="control-buttons">
+            <button class="btn-outage" onclick="sendOutageNotification()">แจ้งเตือน: ไฟดับ/ไฟกลับมา</button>
+        </div>
+    </div>
+    
+    <div id="responseMessage"></div>
 
-    document.getElementById('btnCopy').addEventListener('click', async () => {
-      try {
-        await copyText(ta.value);
-        showMessage('คัดลอกข้อความสำเร็จ ✅');
-      } catch (err) {
-        alert('คัดลอกไม่สำเร็จ: ' + err.message);
-      }
-    });
+    <script>
+        // ฟังก์ชันสร้าง Embed Payload
+        function createEmbed(title, description, color, fields, footerText) {
+            return {
+                title: title,
+                description: description,
+                color: color,
+                fields: fields,
+                footer: { text: footerText }
+            };
+        }
 
-    document.getElementById('btnSelect').addEventListener('click', () => {
-      ta.focus();
-      ta.select();
-      showMessage('เลือกข้อความทั้งหมดแล้ว 📋');
-    });
+        // ฟังก์ชันหลักสำหรับส่ง Webhook (ใช้ซ้ำสำหรับทุกกรณี)
+        function sendWebhook(payload) {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const responseDiv = document.getElementById('responseMessage');
 
-    document.getElementById('btnDownload').addEventListener('click', () => {
-      const blob = new Blob([ta.value], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'vmess.txt';
-      a.click();
-      URL.revokeObjectURL(url);
-      showMessage('ดาวน์โหลด vmess.txt แล้ว 💾');
-    });
+            if (!webhookUrl) {
+                responseDiv.innerHTML = "❌ กรุณากรอก Discord Webhook URL!";
+                responseDiv.style.backgroundColor = '#f8d7da';
+                return;
+            }
 
-    document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
-        e.preventDefault();
-        document.getElementById('btnCopy').click();
-      }
-    });
-  </script>
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                let status = `สถานะการส่ง: ${response.status} ${response.statusText}`;
+                if (response.ok) {
+                    responseDiv.innerHTML = `${status}\n\n**✅ ส่งสำเร็จ!** ตรวจสอบ Discord ของคุณ`;
+                    responseDiv.style.backgroundColor = '#d4edda';
+                } else {
+                    response.text().then(text => {
+                         let errorDetail = text ? ` (${text})` : '';
+                         responseDiv.innerHTML = `${status}\n\n**❌ ส่งล้มเหลว!** Webhook URL อาจผิด หรือ Payload ไม่ถูกต้อง${errorDetail}`;
+                         responseDiv.style.backgroundColor = '#f8d7da';
+                    });
+                }
+            })
+            .catch(error => {
+                responseDiv.innerHTML = `**❌ ข้อผิดพลาดในการเชื่อมต่อ (Client Error):** ${error.message}`;
+                responseDiv.style.backgroundColor = '#f8d7da';
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // A. ฟังก์ชันสำหรับรายงานสถานะกระแสไฟ (ใช้ในการ TEST, Auto Report, และ Simulate)
+        function sendPowerNotification(reportType, V=null, A=null, deviceName=null) {
+            const THRESHOLD = parseFloat(document.getElementById('wattThreshold').value);
+            
+            // ใช้ค่าจาก Input fields ถ้าไม่ได้ส่ง V, A มาจากปุ่มจำลอง
+            if (V === null) {
+                V = parseFloat(document.getElementById('voltageValue').value);
+                A = parseFloat(document.getElementById('currentValue').value);
+                deviceName = "Manual Input";
+            }
+            
+            if (isNaN(V) || isNaN(A) || isNaN(THRESHOLD)) {
+                alert("กรุณากรอกข้อมูลตัวเลขในส่วนกระแสไฟและเกณฑ์ให้ครบถ้วน!");
+                return;
+            }
+            
+            // คำนวณ กำลังไฟฟ้า (W = V * A)
+            const W = V * A;
+            
+            // กำหนดสถานะ
+            let isAlert = W > THRESHOLD;
+            let titleText = isAlert 
+                ? `🚨 ${reportType}: กำลังไฟฟ้าเกินเกณฑ์!` 
+                : `✅ ${reportType}: กำลังไฟฟ้าปกติ`;
+            let colorCode = isAlert ? 16711680 : 65280; // แดง หรือ เขียว
+            let description = `[${deviceName}] กำลังใช้กำลังไฟ: **${W.toFixed(2)} W**`;
+            
+            // สร้างรายละเอียดใน Fields
+            const fields = [
+                {"name": "สถานะโดยรวม", "value": isAlert ? "**ผิดปกติ** (เกินเกณฑ์)" : "**ปกติ**", "inline": true},
+                {"name": "กำลังไฟ (W)", "value": `${W.toFixed(2)} W`, "inline": true},
+                {"name": "กระแส (A)", "value": `${A.toFixed(2)} A`, "inline": true},
+                {"name": "แรงดัน (V)", "value": `${V.toFixed(2)} V`, "inline": true},
+                {"name": "เกณฑ์สูงสุด", "value": `${THRESHOLD.toFixed(2)} W`, "inline": true},
+                {"name": "อุปกรณ์กินกระแส", "value": isAlert ? "❌ **ไม่ปกติ**" : "✅ **ปกติ**", "inline": true}
+            ];
+            
+            const footerText = `${reportType} | Device: ${deviceName}`;
+            
+            const embed = createEmbed(titleText, description, colorCode, fields, footerText);
+            sendWebhook({ embeds: [embed] });
+        }
+
+        // ------------------------------------------------------------------
+        // B. ฟังก์ชันที่ถูกเรียกจากปุ่มจำลองสถานะอุปกรณ์
+        function simulateDevice(deviceName, V, A) {
+            // เรียกฟังก์ชันส่งแจ้งเตือนหลัก โดยส่งค่า V, A, และชื่ออุปกรณ์ไปด้วย
+            sendPowerNotification('Simulated Test', V, A, deviceName);
+        }
+
+        // ------------------------------------------------------------------
+        // C. ฟังก์ชันสำหรับแจ้งเตือน ไฟดับ/ไฟกลับมา (ฉุกเฉิน)
+        function sendOutageNotification() {
+            const outageType = document.getElementById('outageType').value;
+            let title, description, color, fields;
+
+            if (outageType === 'OUTAGE') {
+                title = "🔴 แจ้งเตือนฉุกเฉิน: ไฟดับ (Power OUT)";
+                description = "ระบบตรวจไม่พบกระแสไฟและแรงดันไฟฟ้าจากอุปกรณ์!";
+                color = 10044312; // สีแดงเข้ม (Dark Red)
+                fields = [
+                    {"name": "สาเหตุที่คาด", "value": "ไม่มีการใช้ไฟ หรือระบบเกิดปัญหาไฟดับ", "inline": false},
+                    {"name": "เวลาที่ตรวจพบ", "value": new Date().toLocaleString('th-TH'), "inline": false}
+                ];
+            } else { // RESTORE
+                title = "🟢 แจ้งเตือน: ไฟกลับมาแล้ว (Power Restored)";
+                description = "ระบบกลับมาทำงานตามปกติแล้ว ตรวจพบการจ่ายไฟอีกครั้ง";
+                color = 3066993; // สีเขียวสว่าง (Bright Green)
+                fields = [
+                    {"name": "สถานะปัจจุบัน", "value": "รอการรายงานสถานะกระแสไฟถัดไป", "inline": false},
+                    {"name": "เวลาที่ตรวจพบ", "value": new Date().toLocaleString('th-TH'), "inline": false}
+                ];
+            }
+
+            const embed = createEmbed(title, description, color, fields, "Emergency System Alert");
+            sendWebhook({ embeds: [embed] });
+        }
+    </script>
 </body>
 </html>
