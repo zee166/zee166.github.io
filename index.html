@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Flood Analysis Engine | Command Center</title>
+    <title>Real-time Flood Analysis Engine</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -18,46 +18,28 @@
             --danger: #ff0055;
             --glass-border: rgba(255, 255, 255, 0.08);
         }
-
         * { box-sizing: border-box; transition: all 0.3s ease; }
-        body { 
-            font-family: 'Prompt', sans-serif; 
-            margin: 0; background: var(--bg); color: #fff; 
-            display: flex; min-height: 100vh;
-            background-image: radial-gradient(circle at 0% 0%, #16203a 0%, #0b0f1a 50%);
-        }
-
-        .sidebar { 
-            width: 340px; background: rgba(10, 15, 28, 0.95); backdrop-filter: blur(20px);
-            border-right: 1px solid var(--glass-border); padding: 30px; display: flex; flex-direction: column; gap: 15px;
-        }
-
+        body { font-family: 'Prompt', sans-serif; margin: 0; background: var(--bg); color: #fff; display: flex; min-height: 100vh; background-image: radial-gradient(circle at 0% 0%, #16203a 0%, #0b0f1a 50%); }
+        .sidebar { width: 340px; background: rgba(10, 15, 28, 0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--glass-border); padding: 30px; display: flex; flex-direction: column; gap: 15px; }
         .lang-switch { display: flex; gap: 5px; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 12px; }
         .lang-btn { flex: 1; border: none; background: transparent; color: #6b7280; padding: 8px; cursor: pointer; border-radius: 8px; font-weight: 600; }
         .lang-btn.active { background: var(--accent); color: #000; }
-
         .config-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; }
         .config-card label { font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
         .config-card input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: var(--accent); font-weight: bold; margin-bottom: 8px; }
-
         .main { flex: 1; padding: 40px; overflow-y: auto; }
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 25px; text-align: center; }
         .stat-value { font-family: 'Orbitron', sans-serif; font-size: 3rem; font-weight: 700; margin: 10px 0; }
-
         .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-calib { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: #000; }
         .btn-reset { background: rgba(255,0,85,0.1); color: var(--danger); border: 1px solid var(--danger); }
         .btn-save { background: var(--safe); color: #000; margin-top: 10px; }
         .btn-mute { background: rgba(255,255,255,0.05); color: #fff; width: auto; padding: 10px 20px; border: 1px solid var(--glass-border); }
-
         .chart-section { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 25px; height: 400px; }
-
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
-
         #calibOverlay { display:none; position:fixed; inset:0; background:rgba(11,15,26,0.98); z-index:9999; flex-direction:column; justify-content:center; align-items:center; }
-
         @media (max-width: 1100px) { body { flex-direction: column; } .sidebar { width: 100%; } .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -68,15 +50,12 @@
         <button class="lang-btn active" onclick="setLang('th')" id="btn-th">TH</button>
         <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
     </div>
-
-    <div style="font-family: 'Orbitron'; font-size: 1.2rem; color: var(--accent); font-weight: 700; text-align: center;">HYDRO GUARD PRO</div>
-    
+    <div style="font-family: 'Orbitron'; font-size: 1.2rem; color: var(--accent); font-weight: 700; text-align: center;">Settings</div>
     <div class="config-card">
         <label id="lbl-calib-title">Calibration</label>
         <button class="btn btn-calib" onclick="startCalib()" id="btn-calib-txt">⚡ AUTO CALIBRATE</button>
         <input type="number" id="base_h" placeholder="0.00 CM" style="margin-top: 10px;" readonly>
     </div>
-
     <div class="config-card">
         <label id="lbl-thresholds">Thresholds (CM)</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -86,13 +65,11 @@
         <label id="lbl-danger">DANGER</label>
         <input type="number" id="th_c" value="100">
     </div>
-
     <div class="config-card">
         <label id="lbl-notify">Cloud Notification</label>
         <input type="text" id="discord" placeholder="Discord Webhook URL">
         <button class="btn btn-save" onclick="saveSettings()" id="btn-save-txt">SAVE CONFIG</button>
     </div>
-
     <button class="btn btn-reset" onclick="factoryReset()" id="btn-reset-txt">RESET SYSTEM</button>
 </div>
 
@@ -109,17 +86,16 @@
             </div>
         </div>
     </div>
-
     <div class="stats-grid">
         <div class="stat-card">
             <div style="font-size: 0.8rem; color: #6b7280;" id="lbl-depth">WATER DEPTH</div>
             <div class="stat-value" id="depth_v" style="color: var(--accent);">0.0</div>
             <div style="font-size: 0.7rem; letter-spacing: 2px;">CENTIMETERS</div>
         </div>
-        <div class="stat-card" id="status_card">
+        <div class="stat-card">
             <div style="font-size: 0.8rem; color: #6b7280;" id="lbl-status">SAFETY STATUS</div>
             <div id="ai_t" style="font-size: 1.5rem; font-weight: 700; margin: 20px 0; color: var(--safe);">STANDBY</div>
-            <div id="ai_eta" style="font-size: 0.7rem; color: var(--accent);" id="lbl-wait">WAITING FOR DATA...</div>
+            <div id="ai_wait" style="font-size: 0.7rem; color: var(--accent);">WAITING FOR DATA...</div>
         </div>
         <div class="stat-card">
             <div style="font-size: 0.8rem; color: #6b7280;" id="lbl-raw">SENSOR RAW</div>
@@ -127,7 +103,6 @@
             <div id="h_text" style="font-size: 0.7rem;">CALIBRATED: -- CM</div>
         </div>
     </div>
-
     <div class="chart-section"><canvas id="floodChart"></canvas></div>
 </div>
 
@@ -138,19 +113,18 @@
 </div>
 
 <script>
-    // --- [ 1. CONFIG & MQTT ] ---
     const mqtt_url = 'wss://e10d38d9fdee4dd7809fd84de819c22a.s1.eu.hivemq.cloud:8884/mqtt';
-    const mqtt_options = {
-        username: 'Zee071250', 
-        password: '071250Za', 
-        clientId: 'Web_Dash_' + Math.random().toString(16).substr(2, 5)
-    };
+    const mqtt_options = { username: 'Zee071250', password: '071250Za', clientId: 'Web_Dash_' + Math.random().toString(16).substr(2, 5) };
 
     let installHeight = 0, isCalib = false, samples = [], lastSeen = 0, isMuted = false, currentLang = 'th';
-    let lastAlertLevel = 0; 
     let floodChart;
 
-    const client = mqtt.connect(mqtt_url, mqtt_options);
+    // --- [ SPAM PROTECTION VARIABLES ] ---
+    let lastSentLevel = ""; 
+    let lastSentDepth = 0;
+    let lastNotifyTime = 0;
+    const NOTIFY_COOLDOWN = 6000; // 1 Minute
+    const TOLERANCE = 0.8; // ไม่แจ้งถ้าขยับน้อยกว่า 0.5 ซม.
 
     const dict = {
         th: {
@@ -171,26 +145,26 @@
         }
     };
 
-    // --- [ 2. CORE LOGIC ] ---
-    client.on('connect', () => {
-        client.subscribe('flood/sensor/level');
-        client.subscribe('flood/sensor/base_confirm');
-        updateStatusText();
-    });
+    const discordDict = {
+        th: { title: "🌊 รายงานระดับน้ำ", desc: "ตรวจพบการเปลี่ยนแปลงสถานะ", fieldStatus: "สถานะ", fieldDepth: "ความลึก", footer: "SYSTEM" },
+        en: { title: "🌊 Water Level Report", desc: "Status change detected", fieldStatus: "Status", fieldDepth: "Depth", footer: "SYSTEM" }
+    };
+
+    const client = mqtt.connect(mqtt_url, mqtt_options);
+
+    client.on('connect', () => { client.subscribe('flood/sensor/level'); updateStatusText(); });
 
     client.on('message', (t, m) => {
         const val = parseFloat(m.toString());
         lastSeen = Date.now();
         document.getElementById('raw_v').innerText = val.toFixed(1);
-
         if (isCalib) {
             samples.push(val);
             document.getElementById('p_bar').style.width = (samples.length/30)*100 + '%';
             document.getElementById('countdown').innerText = 30 - samples.length;
             if (samples.length >= 30) finalizeCalib();
         } else if (installHeight > 0) {
-            const depth = Math.max(0, installHeight - val);
-            updateDashboard(depth);
+            updateDashboard(Math.max(0, installHeight - val));
         }
     });
 
@@ -198,71 +172,52 @@
         document.getElementById('depth_v').innerText = d.toFixed(1);
         const c = JSON.parse(localStorage.getItem('flood_cfg_intl') || '{"w":30,"a":60,"c":100}');
         const trend = document.getElementById('ai_t');
-        let currentLv = 0;
+        let curSt = "", clr = 3066993;
 
-        if(d >= c.c) { 
-            currentLv = 3; trend.innerText = dict[currentLang].danger_st; trend.style.color = "var(--danger)"; 
-            client.publish('flood/cmd/alarm', '1');
-        } else if(d >= c.a) { 
-            currentLv = 2; trend.innerText = dict[currentLang].alert_st; trend.style.color = "var(--warn)"; 
-            client.publish('flood/cmd/alarm', '0');
-        } else if(d >= c.w) { 
-            currentLv = 1; trend.innerText = dict[currentLang].warn_st; trend.style.color = "var(--accent)";
-            client.publish('flood/cmd/alarm', '0');
-        } else { 
-            currentLv = 0; trend.innerText = dict[currentLang].safe; trend.style.color = "var(--safe)"; 
-            client.publish('flood/cmd/alarm', '0');
+        if(d >= c.c) { curSt = dict[currentLang].danger_st; trend.style.color = "var(--danger)"; clr = 15158332; client.publish('flood/cmd/alarm', '1'); }
+        else if(d >= c.a) { curSt = dict[currentLang].alert_st; trend.style.color = "var(--warn)"; clr = 15105570; client.publish('flood/cmd/alarm', '0'); }
+        else if(d >= c.w) { curSt = dict[currentLang].warn_st; trend.style.color = "var(--accent)"; clr = 3447003; client.publish('flood/cmd/alarm', '0'); }
+        else { curSt = dict[currentLang].safe; trend.style.color = "var(--safe)"; clr = 3066993; client.publish('flood/cmd/alarm', '0'); }
+        trend.innerText = curSt;
+
+        // --- SPAM & FLUCTUATION PROTECTION ---
+        const now = Date.now();
+        const hasStatusChanged = (curSt !== lastSentLevel);
+        const isSignificant = Math.abs(d - lastSentDepth) > TOLERANCE;
+        const isCooldownOver = (now - lastNotifyTime > NOTIFY_COOLDOWN);
+
+        if (hasStatusChanged && isSignificant && isCooldownOver) {
+            sendDiscordRich(curSt, d, clr);
+            lastSentLevel = curSt;
+            lastSentDepth = d;
+            lastNotifyTime = now;
         }
 
-        if (currentLv > lastAlertLevel) {
-            sendDiscord(`🚨 แจ้งเตือน: ${trend.innerText}\nระดับน้ำ: ${d.toFixed(1)} cm`);
-        }
-        lastAlertLevel = currentLv;
-
-        if(floodChart) {
-            floodChart.data.datasets[0].data.push(d);
-            floodChart.data.datasets[0].data.shift();
-            floodChart.update('none');
-        }
+        if(floodChart) { floodChart.data.datasets[0].data.push(d); floodChart.data.datasets[0].data.shift(); floodChart.update('none'); }
     }
 
-    async function sendDiscord(msg) {
+    async function sendDiscordRich(status, depth, color) {
         const url = document.getElementById('discord').value;
         if (!url || !url.startsWith('http')) return;
-        try {
-            await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({content: msg}) });
-        } catch (e) { console.error("Discord Error", e); }
+        const d = discordDict[currentLang];
+        const body = {
+            embeds: [{
+                title: d.title, description: d.desc, color: color,
+                fields: [
+                    { name: d.fieldStatus, value: `**${status}**`, inline: true },
+                    { name: d.fieldDepth, value: `**${depth.toFixed(1)} ${currentLang==='th'?'ซม.':'CM'}**`, inline: true }
+                ],
+                footer: { text: d.footer }, timestamp: new Date().toISOString()
+            }]
+        };
+        try { fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) }); } catch(e){}
     }
 
-    function initChart() {
-        const ctx = document.getElementById('floodChart').getContext('2d');
-        floodChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array(20).fill(''),
-                datasets: [{
-                    label: 'Water Depth',
-                    data: Array(20).fill(0),
-                    borderColor: '#00d2ff',
-                    backgroundColor: 'rgba(0, 210, 255, 0.1)',
-                    fill: true, tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { display: false } },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-
-    // --- [ 3. UI FUNCTIONS ] ---
     function setLang(lang) {
         currentLang = lang;
         localStorage.setItem('pref_lang', lang);
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-' + lang).classList.add('active');
-        
         const d = dict[lang];
         document.getElementById('main-title').innerText = d.title;
         document.getElementById('sub-title').innerText = d.subtitle;
@@ -279,23 +234,27 @@
         document.getElementById('lbl-status').innerText = d.status;
         document.getElementById('lbl-raw').innerText = d.raw;
         document.getElementById('calib-msg').innerText = d.calib_msg;
+        document.getElementById('ai_wait').innerText = d.wait;
         document.getElementById('muteBtn').innerText = isMuted ? d.audio_off : d.audio_on;
         updateStatusText();
     }
 
-    function startCalib() { 
-        document.getElementById('calibOverlay').style.display = 'flex'; 
-        isCalib = true; samples = []; 
-        client.publish('flood/cmd/setup', '1');
+    function initChart() {
+        const ctx = document.getElementById('floodChart').getContext('2d');
+        floodChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: Array(20).fill(''), datasets: [{ label: 'Depth', data: Array(20).fill(0), borderColor: '#00d2ff', backgroundColor: 'rgba(0, 210, 255, 0.1)', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true }, x: { display: false } }, plugins: { legend: { display: false } } }
+        });
     }
 
+    function startCalib() { document.getElementById('calibOverlay').style.display = 'flex'; isCalib = true; samples = []; client.publish('flood/cmd/setup', '1'); }
     function finalizeCalib() {
         isCalib = false; document.getElementById('calibOverlay').style.display = 'none';
         samples.sort((a,b) => a-b);
         const median = samples[Math.floor(samples.length/2)];
         document.getElementById('base_h').value = median.toFixed(1);
-        installHeight = median;
-        saveSettings();
+        installHeight = median; saveSettings();
     }
 
     function saveSettings() {
@@ -306,14 +265,10 @@
         Swal.fire({ icon: 'success', title: currentLang === 'th' ? 'บันทึกสำเร็จ' : 'SAVED', background: '#161c2e', color: '#fff', timer: 1000, showConfirmButton: false });
     }
 
-    function toggleMute() {
-        isMuted = !isMuted;
-        document.getElementById('muteBtn').innerText = isMuted ? dict[currentLang].audio_off : dict[currentLang].audio_on;
-        client.publish('flood/cmd/mute', isMuted ? '1' : '0');
-    }
+    function toggleMute() { isMuted = !isMuted; document.getElementById('muteBtn').innerText = isMuted ? dict[currentLang].audio_off : dict[currentLang].audio_on; client.publish('flood/cmd/mute', isMuted ? '1' : '0'); }
 
     function updateStatusText() {
-        const isOnline = Date.now() - lastSeen < 8000;
+        const isOnline = (Date.now() - lastSeen < 8000);
         const txt = document.getElementById('st_text');
         const st = document.getElementById('st_tag');
         if(!txt) return;
@@ -322,25 +277,17 @@
         st.style.background = isOnline ? "rgba(0,255,136,0.1)" : "rgba(255,0,85,0.1)";
     }
 
-    function factoryReset() {
-        Swal.fire({ title: currentLang === 'th' ? 'ล้างข้อมูล?' : 'ERASE?', icon: 'warning', showCancelButton: true, background: '#161c2e', color: '#fff' }).then(r => { if(r.isConfirmed) { localStorage.clear(); location.reload(); }});
-    }
+    function factoryReset() { Swal.fire({ title: currentLang==='th'?'รีเซ็ต?':'RESET?', icon: 'warning', showCancelButton: true, background: '#161c2e', color: '#fff' }).then(r => { if(r.isConfirmed) { localStorage.clear(); location.reload(); }}); }
 
     setInterval(updateStatusText, 4000);
-
     window.onload = () => {
-        initChart();
-        const savedLang = localStorage.getItem('pref_lang') || 'th';
-        setLang(savedLang);
-        const savedCfg = localStorage.getItem('flood_cfg_intl');
-        if(savedCfg) {
-            const c = JSON.parse(savedCfg);
-            document.getElementById('base_h').value = c.h; 
-            document.getElementById('th_w').value = c.w;
-            document.getElementById('th_a').value = c.a; 
-            document.getElementById('th_c').value = c.c;
-            document.getElementById('discord').value = c.u;
-            installHeight = parseFloat(c.h);
+        initChart(); setLang(localStorage.getItem('pref_lang') || 'th');
+        const saved = localStorage.getItem('flood_cfg_intl');
+        if(saved) {
+            const c = JSON.parse(saved);
+            document.getElementById('base_h').value = c.h; document.getElementById('th_w').value = c.w;
+            document.getElementById('th_a').value = c.a; document.getElementById('th_c').value = c.c;
+            document.getElementById('discord').value = c.u; installHeight = parseFloat(c.h);
             document.getElementById('h_text').innerText = `CALIBRATED: ${installHeight} CM`;
         }
     };
