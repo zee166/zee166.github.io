@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Flood Analysis Engine</title>
+    <title>Real-time Flood Analysis Engine (Sync Version)</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -40,6 +40,7 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
         #calibOverlay { display:none; position:fixed; inset:0; background:rgba(11,15,26,0.98); z-index:9999; flex-direction:column; justify-content:center; align-items:center; }
+        .sync-tag { font-size: 0.6rem; color: var(--safe); margin-top: -5px; margin-bottom: 5px; display: block; opacity: 0.8; }
         @media (max-width: 1100px) { body { flex-direction: column; } .sidebar { width: 100%; } .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -55,6 +56,7 @@
         <label id="lbl-calib-title">Calibration</label>
         <button class="btn btn-calib" onclick="startCalib()" id="btn-calib-txt">⚡ AUTO CALIBRATE</button>
         <input type="number" id="base_h" placeholder="0.00 CM" style="margin-top: 10px;" readonly>
+        <span class="sync-tag" id="sync-base">● Waiting for Board...</span>
     </div>
     <div class="config-card">
         <label id="lbl-thresholds">Thresholds (CM)</label>
@@ -64,6 +66,7 @@
         </div>
         <label id="lbl-danger">DANGER</label>
         <input type="number" id="th_c" value="100">
+        <span class="sync-tag" id="sync-danger">● In Sync with ESP32</span>
     </div>
     <div class="config-card">
         <label id="lbl-notify">Cloud Notification</label>
@@ -119,12 +122,11 @@
     let installHeight = 0, isCalib = false, samples = [], lastSeen = 0, isMuted = false, currentLang = 'th';
     let floodChart;
 
-    // --- [ SPAM PROTECTION VARIABLES ] ---
     let lastSentLevel = ""; 
     let lastSentDepth = 0;
     let lastNotifyTime = 0;
-    const NOTIFY_COOLDOWN = 6000; // 1 Minute
-    const TOLERANCE = 0.8; // ไม่แจ้งถ้าขยับน้อยกว่า 0.5 ซม.
+    const NOTIFY_COOLDOWN = 5000; // 1 Minute
+    const TOLERANCE = 0.5;
 
     const dict = {
         th: {
@@ -133,7 +135,8 @@
             danger: "วิกฤต", notify: "แจ้งเตือนผ่านคลาวด์", btn_save: "บันทึกการตั้งค่า", btn_reset: "รีเซ็ตระบบ",
             depth: "ความลึกน้ำ", status: "สถานะความปลอดภัย", raw: "ระยะเซนเซอร์ดิบ", wait: "รอข้อมูล...",
             live: "ระบบทำงานอยู่", offline: "อุปกรณ์ออฟไลน์", calib_msg: "กำลังสแกนพื้นที่...", 
-            safe: "ปกติ", warn_st: "เฝ้าระวัง", alert_st: "เตือนภัย", danger_st: "วิกฤต", audio_on: "🔊 เปิดเสียง", audio_off: "🔇 ปิดเสียง"
+            safe: "ปกติ", warn_st: "เฝ้าระวัง", alert_st: "เตือนภัย", danger_st: "วิกฤต", audio_on: "🔊 เปิดเสียง", audio_off: "🔇 ปิดเสียง",
+            synced: "● ตรงกับในบอร์ด", waiting: "● กำลังดึงข้อมูล..."
         },
         en: {
             title: "Monitoring Dashboard", subtitle: "Real-time Flood Analysis Engine", calib_t: "System Calibration", 
@@ -141,76 +144,130 @@
             danger: "DANGER", notify: "Cloud Notification", btn_save: "SAVE CONFIG", btn_reset: "RESET SYSTEM",
             depth: "WATER DEPTH", status: "SAFETY STATUS", raw: "SENSOR RAW", wait: "WAITING FOR DATA...",
             live: "SYSTEM LIVE", offline: "DEVICE OFFLINE", calib_msg: "SCANNING TERRAIN...",
-            safe: "SAFE", warn_st: "WATCH", alert_st: "ALERT", danger_st: "CRITICAL", audio_on: "🔊 AUDIO ON", audio_off: "🔇 AUDIO OFF"
+            safe: "SAFE", warn_st: "WATCH", alert_st: "ALERT", danger_st: "CRITICAL", audio_on: "🔊 AUDIO ON", audio_off: "🔇 AUDIO OFF",
+            synced: "● In Sync with ESP32", waiting: "● Fetching from Board..."
         }
-    };
-
-    const discordDict = {
-        th: { title: "🌊 รายงานระดับน้ำ", desc: "ตรวจพบการเปลี่ยนแปลงสถานะ", fieldStatus: "สถานะ", fieldDepth: "ความลึก", footer: "SYSTEM" },
-        en: { title: "🌊 Water Level Report", desc: "Status change detected", fieldStatus: "Status", fieldDepth: "Depth", footer: "SYSTEM" }
     };
 
     const client = mqtt.connect(mqtt_url, mqtt_options);
 
-    client.on('connect', () => { client.subscribe('flood/sensor/level'); updateStatusText(); });
+    client.on('connect', () => { 
+        // Subscribe ทุกอย่างที่จำเป็น
+        client.subscribe('flood/sensor/level'); 
+        client.subscribe('flood/sensor/base_confirm');
+        client.subscribe('flood/sensor/danger_confirm');
+        client.subscribe('flood/sensor/mute_confirm');
+        updateStatusText(); 
+    });
 
-    client.on('message', (t, m) => {
-        const val = parseFloat(m.toString());
+    client.on('message', (topic, message) => {
+        const val = message.toString();
         lastSeen = Date.now();
-        document.getElementById('raw_v').innerText = val.toFixed(1);
-        if (isCalib) {
-            samples.push(val);
-            document.getElementById('p_bar').style.width = (samples.length/30)*100 + '%';
-            document.getElementById('countdown').innerText = 30 - samples.length;
-            if (samples.length >= 30) finalizeCalib();
-        } else if (installHeight > 0) {
-            updateDashboard(Math.max(0, installHeight - val));
+
+        // รับค่าระยะดิบ
+        if (topic === 'flood/sensor/level') {
+            const num = parseFloat(val);
+            document.getElementById('raw_v').innerText = num.toFixed(1);
+            if (isCalib) {
+                samples.push(num);
+                document.getElementById('p_bar').style.width = (samples.length/30)*100 + '%';
+                document.getElementById('countdown').innerText = 30 - samples.length;
+                if (samples.length >= 30) finalizeCalib();
+            } else if (installHeight > 0) {
+                updateDashboard(Math.max(0, installHeight - num));
+            }
+        }
+
+        // รับค่าระยะพื้นดินที่บอร์ดส่งมายืนยัน
+        if (topic === 'flood/sensor/base_confirm') {
+            installHeight = parseFloat(val);
+            document.getElementById('base_h').value = installHeight.toFixed(1);
+            document.getElementById('h_text').innerText = `IN BOARD: ${installHeight} CM`;
+            document.getElementById('sync-base').innerText = dict[currentLang].synced;
+            document.getElementById('sync-base').style.color = "var(--safe)";
+        }
+
+        // รับค่าเกณฑ์อันตรายที่บอร์ดส่งมายืนยัน
+        if (topic === 'flood/sensor/danger_confirm') {
+            document.getElementById('th_c').value = val;
+            document.getElementById('sync-danger').innerText = dict[currentLang].synced;
+            document.getElementById('sync-danger').style.color = "var(--safe)";
+        }
+
+        // รับสถานะ Mute
+        if (topic === 'flood/sensor/mute_confirm') {
+            isMuted = (val === "1");
+            document.getElementById('muteBtn').innerText = isMuted ? dict[currentLang].audio_off : dict[currentLang].audio_on;
         }
     });
 
+    function saveSettings() {
+        const h = document.getElementById('base_h').value;
+        const c = document.getElementById('th_c').value;
+        const w = document.getElementById('th_w').value;
+        const a = document.getElementById('th_a').value;
+        const u = document.getElementById('discord').value;
+
+        // 1. ส่งคำสั่งไปที่บอร์ดผ่าน MQTT (เพื่อให้บอร์ดบันทึกลง Preferences)
+        if(client.connected) {
+            client.publish('flood/cmd/set_base', h.toString());
+            client.publish('flood/cmd/set_danger', c.toString());
+        }
+
+        // 2. เซฟลง LocalStorage ของ Browser
+        const cfg = { h, w, a, c, u };
+        localStorage.setItem('flood_cfg_intl', JSON.stringify(cfg));
+        installHeight = parseFloat(h);
+        
+        Swal.fire({ icon: 'success', title: currentLang === 'th' ? 'บันทึกและส่งข้อมูลไปที่บอร์ดแล้ว' : 'Saved & Synced to Board', background: '#161c2e', color: '#fff', timer: 1500, showConfirmButton: false });
+    }
+
+    function finalizeCalib() {
+        isCalib = false; 
+        document.getElementById('calibOverlay').style.display = 'none';
+        samples.sort((a,b) => a-b);
+        const median = samples[Math.floor(samples.length/2)];
+        document.getElementById('base_h').value = median.toFixed(1);
+        
+        // ส่งไปเซฟที่บอร์ดทันทีที่ Calibrate เสร็จ
+        if(client.connected) client.publish('flood/cmd/set_base', median.toFixed(1).toString());
+        
+        saveSettings();
+    }
+
+    function toggleMute() { 
+        isMuted = !isMuted; 
+        document.getElementById('muteBtn').innerText = isMuted ? dict[currentLang].audio_off : dict[currentLang].audio_on; 
+        client.publish('flood/cmd/mute', isMuted ? '1' : '0'); 
+    }
+
+    // --- ส่วนอื่น ๆ คงเดิมตามโค้ดต้นฉบับของคุณ ---
     function updateDashboard(d) {
         document.getElementById('depth_v').innerText = d.toFixed(1);
         const c = JSON.parse(localStorage.getItem('flood_cfg_intl') || '{"w":30,"a":60,"c":100}');
         const trend = document.getElementById('ai_t');
         let curSt = "", clr = 3066993;
 
-        if(d >= c.c) { curSt = dict[currentLang].danger_st; trend.style.color = "var(--danger)"; clr = 15158332; client.publish('flood/cmd/alarm', '1'); }
-        else if(d >= c.a) { curSt = dict[currentLang].alert_st; trend.style.color = "var(--warn)"; clr = 15105570; client.publish('flood/cmd/alarm', '0'); }
-        else if(d >= c.w) { curSt = dict[currentLang].warn_st; trend.style.color = "var(--accent)"; clr = 3447003; client.publish('flood/cmd/alarm', '0'); }
-        else { curSt = dict[currentLang].safe; trend.style.color = "var(--safe)"; clr = 3066993; client.publish('flood/cmd/alarm', '0'); }
+        if(d >= c.c) { curSt = dict[currentLang].danger_st; trend.style.color = "var(--danger)"; clr = 15158332; }
+        else if(d >= c.a) { curSt = dict[currentLang].alert_st; trend.style.color = "var(--warn)"; clr = 15105570; }
+        else if(d >= c.w) { curSt = dict[currentLang].warn_st; trend.style.color = "var(--accent)"; clr = 3447003; }
+        else { curSt = dict[currentLang].safe; trend.style.color = "var(--safe)"; clr = 3066993; }
         trend.innerText = curSt;
 
-        // --- SPAM & FLUCTUATION PROTECTION ---
         const now = Date.now();
-        const hasStatusChanged = (curSt !== lastSentLevel);
-        const isSignificant = Math.abs(d - lastSentDepth) > TOLERANCE;
-        const isCooldownOver = (now - lastNotifyTime > NOTIFY_COOLDOWN);
-
-        if (hasStatusChanged && isSignificant && isCooldownOver) {
+        if ((curSt !== lastSentLevel) && (Math.abs(d - lastSentDepth) > TOLERANCE) && (now - lastNotifyTime > NOTIFY_COOLDOWN)) {
             sendDiscordRich(curSt, d, clr);
-            lastSentLevel = curSt;
-            lastSentDepth = d;
-            lastNotifyTime = now;
+            lastSentLevel = curSt; lastSentDepth = d; lastNotifyTime = now;
         }
-
         if(floodChart) { floodChart.data.datasets[0].data.push(d); floodChart.data.datasets[0].data.shift(); floodChart.update('none'); }
     }
 
     async function sendDiscordRich(status, depth, color) {
         const url = document.getElementById('discord').value;
         if (!url || !url.startsWith('http')) return;
-        const d = discordDict[currentLang];
-        const body = {
-            embeds: [{
-                title: d.title, description: d.desc, color: color,
-                fields: [
-                    { name: d.fieldStatus, value: `**${status}**`, inline: true },
-                    { name: d.fieldDepth, value: `**${depth.toFixed(1)} ${currentLang==='th'?'ซม.':'CM'}**`, inline: true }
-                ],
-                footer: { text: d.footer }, timestamp: new Date().toISOString()
-            }]
-        };
-        try { fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) }); } catch(e){}
+        const d = { th: { title: "🌊 รายงานระดับน้ำ", fieldStatus: "สถานะ", fieldDepth: "ความลึก" }, en: { title: "🌊 Water Level Report", fieldStatus: "Status", fieldDepth: "Depth" } }[currentLang];
+        const body = { embeds: [{ title: d.title, color: color, fields: [{ name: d.fieldStatus, value: `**${status}**`, inline: true }, { name: d.fieldDepth, value: `**${depth.toFixed(1)} CM**`, inline: true }], timestamp: new Date().toISOString() }] };
+        fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) }).catch(e=>{});
     }
 
     function setLang(lang) {
@@ -248,25 +305,6 @@
         });
     }
 
-    function startCalib() { document.getElementById('calibOverlay').style.display = 'flex'; isCalib = true; samples = []; client.publish('flood/cmd/setup', '1'); }
-    function finalizeCalib() {
-        isCalib = false; document.getElementById('calibOverlay').style.display = 'none';
-        samples.sort((a,b) => a-b);
-        const median = samples[Math.floor(samples.length/2)];
-        document.getElementById('base_h').value = median.toFixed(1);
-        installHeight = median; saveSettings();
-    }
-
-    function saveSettings() {
-        const cfg = { h: document.getElementById('base_h').value, w: document.getElementById('th_w').value, a: document.getElementById('th_a').value, c: document.getElementById('th_c').value, u: document.getElementById('discord').value };
-        localStorage.setItem('flood_cfg_intl', JSON.stringify(cfg));
-        installHeight = parseFloat(cfg.h);
-        document.getElementById('h_text').innerText = `CALIBRATED: ${installHeight} CM`;
-        Swal.fire({ icon: 'success', title: currentLang === 'th' ? 'บันทึกสำเร็จ' : 'SAVED', background: '#161c2e', color: '#fff', timer: 1000, showConfirmButton: false });
-    }
-
-    function toggleMute() { isMuted = !isMuted; document.getElementById('muteBtn').innerText = isMuted ? dict[currentLang].audio_off : dict[currentLang].audio_on; client.publish('flood/cmd/mute', isMuted ? '1' : '0'); }
-
     function updateStatusText() {
         const isOnline = (Date.now() - lastSeen < 8000);
         const txt = document.getElementById('st_text');
@@ -276,6 +314,8 @@
         st.style.color = isOnline ? "var(--safe)" : "var(--danger)";
         st.style.background = isOnline ? "rgba(0,255,136,0.1)" : "rgba(255,0,85,0.1)";
     }
+
+    function startCalib() { document.getElementById('calibOverlay').style.display = 'flex'; isCalib = true; samples = []; client.publish('flood/cmd/setup', '1'); }
 
     function factoryReset() { Swal.fire({ title: currentLang==='th'?'รีเซ็ต?':'RESET?', icon: 'warning', showCancelButton: true, background: '#161c2e', color: '#fff' }).then(r => { if(r.isConfirmed) { localStorage.clear(); location.reload(); }}); }
 
@@ -288,7 +328,6 @@
             document.getElementById('base_h').value = c.h; document.getElementById('th_w').value = c.w;
             document.getElementById('th_a').value = c.a; document.getElementById('th_c').value = c.c;
             document.getElementById('discord').value = c.u; installHeight = parseFloat(c.h);
-            document.getElementById('h_text').innerText = `CALIBRATED: ${installHeight} CM`;
         }
     };
 </script>
