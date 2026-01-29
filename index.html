@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Flood Analysis Engine (Sync Version)</title>
+    <title>HydroGuard | Premium Analysis Dashboard</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -36,12 +36,12 @@
         .btn-reset { background: rgba(255,0,85,0.1); color: var(--danger); border: 1px solid var(--danger); }
         .btn-save { background: var(--safe); color: #000; margin-top: 10px; }
         .btn-mute { background: rgba(255,255,255,0.05); color: #fff; width: auto; padding: 10px 20px; border: 1px solid var(--glass-border); }
-        .chart-section { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 25px; height: 400px; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .btn-mute.muted { background: var(--danger); color: #fff; border-color: transparent; }
+        .chart-section { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 28px; padding: 25px; height: 350px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         #calibOverlay { display:none; position:fixed; inset:0; background:rgba(11,15,26,0.98); z-index:9999; flex-direction:column; justify-content:center; align-items:center; }
         .sync-tag { font-size: 0.6rem; color: var(--safe); margin-top: -5px; margin-bottom: 5px; display: block; opacity: 0.8; }
-        @media (max-width: 1100px) { body { flex-direction: column; } .sidebar { width: 100%; } .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -51,29 +51,28 @@
         <button class="lang-btn active" onclick="setLang('th')" id="btn-th">TH</button>
         <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
     </div>
-    <div style="font-family: 'Orbitron'; font-size: 1.2rem; color: var(--accent); font-weight: 700; text-align: center;">Settings</div>
+    <div style="font-family: 'Orbitron'; font-size: 1.2rem; color: var(--accent); font-weight: 700; text-align: center;" id="lbl-settings">Settings</div>
     <div class="config-card">
-        <label id="lbl-calib-title">Calibration</label>
+        <label id="lbl-calib-title">Ground Setup</label>
         <button class="btn btn-calib" onclick="startCalib()" id="btn-calib-txt">⚡ AUTO CALIBRATE</button>
         <input type="number" id="base_h" placeholder="0.00 CM" style="margin-top: 10px;" readonly>
-        <span class="sync-tag" id="sync-base">● Waiting for Board...</span>
+        <span class="sync-tag" id="sync-base">● Waiting...</span>
     </div>
     <div class="config-card">
-        <label id="lbl-thresholds">Thresholds (CM)</label>
+        <label id="lbl-thresholds">Danger Zones</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div><label id="lbl-watch">WATCH</label><input type="number" id="th_w" value="30"></div>
             <div><label id="lbl-alert">ALERT</label><input type="number" id="th_a" value="60"></div>
         </div>
-        <label id="lbl-danger">DANGER</label>
+        <label id="lbl-danger">CRITICAL</label>
         <input type="number" id="th_c" value="100">
-        <span class="sync-tag" id="sync-danger">● In Sync with ESP32</span>
     </div>
     <div class="config-card">
-        <label id="lbl-notify">Cloud Notification</label>
-        <input type="text" id="discord" placeholder="Discord Webhook URL">
-        <button class="btn btn-save" onclick="saveSettings()" id="btn-save-txt">SAVE CONFIG</button>
+        <label id="lbl-notify">Discord Alert</label>
+        <input type="text" id="discord" placeholder="Webhook URL">
+        <button class="btn btn-save" onclick="saveSettings()" id="btn-save-txt">SAVE SETTINGS</button>
     </div>
-    <button class="btn btn-reset" onclick="factoryReset()" id="btn-reset-txt">RESET SYSTEM</button>
+    <button class="btn btn-reset" onclick="factoryReset()" id="btn-reset-txt">FACTORY RESET</button>
 </div>
 
 <div class="main">
@@ -93,17 +92,17 @@
         <div class="stat-card">
             <div style="font-size: 0.8rem; color: #6b7280;" id="lbl-depth">WATER DEPTH</div>
             <div class="stat-value" id="depth_v" style="color: var(--accent);">0.0</div>
-            <div style="font-size: 0.7rem; letter-spacing: 2px;">CENTIMETERS</div>
+            <div style="font-size: 0.7rem; letter-spacing: 2px;" id="lbl-unit-cm">CENTIMETERS</div>
         </div>
         <div class="stat-card">
             <div style="font-size: 0.8rem; color: #6b7280;" id="lbl-status">SAFETY STATUS</div>
-            <div id="ai_t" style="font-size: 1.5rem; font-weight: 700; margin: 20px 0; color: var(--safe);">STANDBY</div>
+            <div id="ai_t" style="font-size: 1.5rem; font-weight: 700; margin: 20px 0; color: var(--safe);">IDLE</div>
             <div id="ai_wait" style="font-size: 0.7rem; color: var(--accent);">WAITING FOR DATA...</div>
         </div>
         <div class="stat-card">
             <div style="font-size: 0.8rem; color: #6b7280;" id="lbl-raw">SENSOR RAW</div>
             <div class="stat-value" id="raw_v" style="color: #334155; font-size: 2.5rem;">0.0</div>
-            <div id="h_text" style="font-size: 0.7rem;">CALIBRATED: -- CM</div>
+            <div id="h_text" style="font-size: 0.7rem;">CALIBRATED</div>
         </div>
     </div>
     <div class="chart-section"><canvas id="floodChart"></canvas></div>
@@ -120,51 +119,53 @@
     const mqtt_options = { username: 'Zee071250', password: '071250Za', clientId: 'Web_Dash_' + Math.random().toString(16).substr(2, 5) };
 
     let installHeight = 0, isCalib = false, samples = [], lastSeen = 0, isMuted = false, currentLang = 'th';
-    let floodChart;
-
-    let lastSentLevel = ""; 
-    let lastSentDepth = 0;
-    let lastNotifyTime = 0;
-    const NOTIFY_COOLDOWN = 5000; // 1 Minute
-    const TOLERANCE = 0.5;
+    let floodChart, lastSentLevel = "", lastNotifyTime = 0;
+    const NOTIFY_COOLDOWN = 3000;
 
     const dict = {
         th: {
-            title: "แดชบอร์ดเฝ้าระวังน้ำ", subtitle: "ระบบวิเคราะห์ระดับน้ำเรียลไทม์", calib_t: "ตั้งค่าระดับพื้นดิน", 
-            btn_calib: "⚡ ตั้งค่าพื้นดินอัตโนมัติ", thresholds: "เกณฑ์การแจ้งเตือน (ซม.)", watch: "เฝ้าระวัง", alert: "เตือนภัย",
-            danger: "วิกฤต", notify: "แจ้งเตือนผ่านคลาวด์", btn_save: "บันทึกการตั้งค่า", btn_reset: "รีเซ็ตระบบ",
-            depth: "ความลึกน้ำ", status: "สถานะความปลอดภัย", raw: "ระยะเซนเซอร์ดิบ", wait: "รอข้อมูล...",
-            live: "ระบบทำงานอยู่", offline: "อุปกรณ์ออฟไลน์", calib_msg: "กำลังสแกนพื้นที่...", 
-            safe: "ปกติ", warn_st: "เฝ้าระวัง", alert_st: "เตือนภัย", danger_st: "วิกฤต", audio_on: "🔊 เปิดเสียง", audio_off: "🔇 ปิดเสียง",
-            synced: "● ตรงกับในบอร์ด", waiting: "● กำลังดึงข้อมูล..."
+            title: "แดชบอร์ดเฝ้าระวังน้ำ", subtitle: "ระบบวิเคราะห์ระดับน้ำเรียลไทม์", settings: "ตั้งค่าระบบ",
+            calib_t: "ตั้งค่าระดับพื้นดิน", btn_calib: "⚡ ตั้งค่าพื้นดินอัตโนมัติ", thresholds: "เกณฑ์การแจ้งเตือน (ซม.)",
+            watch: "เฝ้าระวัง", alert: "เตือนภัย", danger: "วิกฤต", notify: "แจ้งเตือนผ่านคลาวด์",
+            btn_save: "บันทึกการตั้งค่า", btn_reset: "รีเซ็ตระบบ", depth: "ความลึกน้ำ", unit_cm: "เซนติเมตร",
+            status: "สถานะความปลอดภัย", raw: "ระยะเซนเซอร์ดิบ", wait: "รอข้อมูล...", live: "ระบบทำงานอยู่",
+            offline: "อุปกรณ์ออฟไลน์", calib_msg: "กำลังสแกนพื้นที่...", audio_on: "🔊 เปิดเสียง",
+            audio_off: "🔇 ปิดเสียง", safe: "ปกติ", warn_st: "เฝ้าระวัง", alert_st: "เตือนภัย",
+            danger_st: "วิกฤตอันตราย", sync_ok: "● เชื่อมต่อแล้ว", sync_wait: "● กำลังรอ...",
+            dis_title: "🌊 HydroGuard Monitoring System", dis_sub: "แจ้งเตือนเฝ้าระวัง: ระดับน้ำสูงกว่าปกติ",
+            dis_link: "เปิดหน้า Dashboard แบบเรียลไทม์", dis_status: "📋 สถานะระบบ", dis_lvl: "ระดับ",
+            dis_pri: "ลำดับความสำคัญ", dis_now: "📏 ระดับน้ำล่าสุด", dis_inst: "🏗️ ระยะติดตั้ง",
+            dis_anal: "📊 การวิเคราะห์", dis_footer: "ข้อมูลจากสถานีตรวจวัด Node-01 ผ่านการเข้ารหัส Secure MQTT",
+            pri_low: "LOW", pri_med: "MEDIUM", pri_high: "HIGH"
         },
         en: {
-            title: "Monitoring Dashboard", subtitle: "Real-time Flood Analysis Engine", calib_t: "System Calibration", 
-            btn_calib: "⚡ AUTO CALIBRATE", thresholds: "Alert Thresholds (CM)", watch: "WATCH", alert: "ALERT",
-            danger: "DANGER", notify: "Cloud Notification", btn_save: "SAVE CONFIG", btn_reset: "RESET SYSTEM",
-            depth: "WATER DEPTH", status: "SAFETY STATUS", raw: "SENSOR RAW", wait: "WAITING FOR DATA...",
-            live: "SYSTEM LIVE", offline: "DEVICE OFFLINE", calib_msg: "SCANNING TERRAIN...",
-            safe: "SAFE", warn_st: "WATCH", alert_st: "ALERT", danger_st: "CRITICAL", audio_on: "🔊 AUDIO ON", audio_off: "🔇 AUDIO OFF",
-            synced: "● In Sync with ESP32", waiting: "● Fetching from Board..."
+            title: "Flood Dashboard", subtitle: "Real-time Analysis Engine", settings: "Control Panel",
+            calib_t: "Ground Setup", btn_calib: "⚡ AUTO CALIBRATE", thresholds: "Alert Thresholds (CM)",
+            watch: "WATCH", alert: "ALERT", danger: "CRITICAL", notify: "Cloud Notification",
+            btn_save: "SAVE SETTINGS", btn_reset: "RESET SYSTEM", depth: "WATER DEPTH", unit_cm: "CENTIMETERS",
+            status: "SAFETY STATUS", raw: "SENSOR RAW", wait: "WAITING FOR DATA...", live: "SYSTEM LIVE",
+            offline: "OFFLINE", calib_msg: "SCANNING SURFACE...", audio_on: "🔊 AUDIO ON",
+            audio_off: "🔇 AUDIO OFF", safe: "SAFE", warn_st: "WATCHING", alert_st: "ALERT",
+            danger_st: "CRITICAL", sync_ok: "● SYNCED", sync_wait: "● WAITING...",
+            dis_title: "🌊 HydroGuard Monitoring System", dis_sub: "Flood Warning: Unusual Water Level",
+            dis_link: "Open Real-time Dashboard", dis_status: "📋 System Status", dis_lvl: "Level",
+            dis_pri: "Priority", dis_now: "📏 Current Level", dis_inst: "🏗️ Install Height",
+            dis_anal: "📊 Analysis", dis_footer: "Data from Station Node-01 via Secure MQTT",
+            pri_low: "LOW", pri_med: "MEDIUM", pri_high: "HIGH"
         }
     };
 
     const client = mqtt.connect(mqtt_url, mqtt_options);
 
     client.on('connect', () => { 
-        // Subscribe ทุกอย่างที่จำเป็น
         client.subscribe('flood/sensor/level'); 
         client.subscribe('flood/sensor/base_confirm');
-        client.subscribe('flood/sensor/danger_confirm');
-        client.subscribe('flood/sensor/mute_confirm');
         updateStatusText(); 
     });
 
     client.on('message', (topic, message) => {
         const val = message.toString();
         lastSeen = Date.now();
-
-        // รับค่าระยะดิบ
         if (topic === 'flood/sensor/level') {
             const num = parseFloat(val);
             document.getElementById('raw_v').innerText = num.toFixed(1);
@@ -177,107 +178,80 @@
                 updateDashboard(Math.max(0, installHeight - num));
             }
         }
-
-        // รับค่าระยะพื้นดินที่บอร์ดส่งมายืนยัน
         if (topic === 'flood/sensor/base_confirm') {
             installHeight = parseFloat(val);
             document.getElementById('base_h').value = installHeight.toFixed(1);
-            document.getElementById('h_text').innerText = `IN BOARD: ${installHeight} CM`;
-            document.getElementById('sync-base').innerText = dict[currentLang].synced;
-            document.getElementById('sync-base').style.color = "var(--safe)";
-        }
-
-        // รับค่าเกณฑ์อันตรายที่บอร์ดส่งมายืนยัน
-        if (topic === 'flood/sensor/danger_confirm') {
-            document.getElementById('th_c').value = val;
-            document.getElementById('sync-danger').innerText = dict[currentLang].synced;
-            document.getElementById('sync-danger').style.color = "var(--safe)";
-        }
-
-        // รับสถานะ Mute
-        if (topic === 'flood/sensor/mute_confirm') {
-            isMuted = (val === "1");
-            document.getElementById('muteBtn').innerText = isMuted ? dict[currentLang].audio_off : dict[currentLang].audio_on;
+            document.getElementById('sync-base').innerText = dict[currentLang].sync_ok;
         }
     });
 
-    function saveSettings() {
-        const h = document.getElementById('base_h').value;
-        const c = document.getElementById('th_c').value;
-        const w = document.getElementById('th_w').value;
-        const a = document.getElementById('th_a').value;
-        const u = document.getElementById('discord').value;
-
-        // 1. ส่งคำสั่งไปที่บอร์ดผ่าน MQTT (เพื่อให้บอร์ดบันทึกลง Preferences)
-        if(client.connected) {
-            client.publish('flood/cmd/set_base', h.toString());
-            client.publish('flood/cmd/set_danger', c.toString());
-        }
-
-        // 2. เซฟลง LocalStorage ของ Browser
-        const cfg = { h, w, a, c, u };
-        localStorage.setItem('flood_cfg_intl', JSON.stringify(cfg));
-        installHeight = parseFloat(h);
-        
-        Swal.fire({ icon: 'success', title: currentLang === 'th' ? 'บันทึกและส่งข้อมูลไปที่บอร์ดแล้ว' : 'Saved & Synced to Board', background: '#161c2e', color: '#fff', timer: 1500, showConfirmButton: false });
-    }
-
-    function finalizeCalib() {
-        isCalib = false; 
-        document.getElementById('calibOverlay').style.display = 'none';
-        samples.sort((a,b) => a-b);
-        const median = samples[Math.floor(samples.length/2)];
-        document.getElementById('base_h').value = median.toFixed(1);
-        
-        // ส่งไปเซฟที่บอร์ดทันทีที่ Calibrate เสร็จ
-        if(client.connected) client.publish('flood/cmd/set_base', median.toFixed(1).toString());
-        
-        saveSettings();
-    }
-
-    function toggleMute() { 
-        isMuted = !isMuted; 
-        document.getElementById('muteBtn').innerText = isMuted ? dict[currentLang].audio_off : dict[currentLang].audio_on; 
-        client.publish('flood/cmd/mute', isMuted ? '1' : '0'); 
-    }
-
-    // --- ส่วนอื่น ๆ คงเดิมตามโค้ดต้นฉบับของคุณ ---
     function updateDashboard(d) {
         document.getElementById('depth_v').innerText = d.toFixed(1);
-        const c = JSON.parse(localStorage.getItem('flood_cfg_intl') || '{"w":30,"a":60,"c":100}');
-        const trend = document.getElementById('ai_t');
-        let curSt = "", clr = 3066993;
+        const cfg = JSON.parse(localStorage.getItem('flood_cfg_intl') || '{"w":30,"a":60,"c":100}');
+        const statusEl = document.getElementById('ai_t');
+        let curSt = "", clr = 3066993, pri = "LOW", p_icon = "🟢";
 
-        if(d >= c.c) { curSt = dict[currentLang].danger_st; trend.style.color = "var(--danger)"; clr = 15158332; }
-        else if(d >= c.a) { curSt = dict[currentLang].alert_st; trend.style.color = "var(--warn)"; clr = 15105570; }
-        else if(d >= c.w) { curSt = dict[currentLang].warn_st; trend.style.color = "var(--accent)"; clr = 3447003; }
-        else { curSt = dict[currentLang].safe; trend.style.color = "var(--safe)"; clr = 3066993; }
-        trend.innerText = curSt;
+        // Logic Hysteresis +0.5 cm
+        if(d >= (parseFloat(cfg.c) + 0.5)) { curSt = dict[currentLang].danger_st; statusEl.style.color = "var(--danger)"; clr = 15158332; pri = dict[currentLang].pri_high; p_icon = "🔴"; }
+        else if(d >= (parseFloat(cfg.a) + 0.5)) { curSt = dict[currentLang].alert_st; statusEl.style.color = "var(--warn)"; clr = 15105570; pri = dict[currentLang].pri_med; p_icon = "🟠"; }
+        else if(d >= (parseFloat(cfg.w) + 0.5)) { curSt = dict[currentLang].warn_st; statusEl.style.color = "var(--accent)"; clr = 3447003; pri = dict[currentLang].pri_med; p_icon = "🟡"; }
+        else { curSt = dict[currentLang].safe; statusEl.style.color = "var(--safe)"; clr = 3066993; pri = dict[currentLang].pri_low; p_icon = "🟢"; }
+        
+        statusEl.innerText = curSt;
 
-        const now = Date.now();
-        if ((curSt !== lastSentLevel) && (Math.abs(d - lastSentDepth) > TOLERANCE) && (now - lastNotifyTime > NOTIFY_COOLDOWN)) {
-            sendDiscordRich(curSt, d, clr);
-            lastSentLevel = curSt; lastSentDepth = d; lastNotifyTime = now;
+        if (curSt !== lastSentLevel && (Date.now() - lastNotifyTime > NOTIFY_COOLDOWN)) {
+            sendDiscordPremium(curSt, d, clr, pri, p_icon);
+            lastSentLevel = curSt; lastNotifyTime = Date.now();
         }
         if(floodChart) { floodChart.data.datasets[0].data.push(d); floodChart.data.datasets[0].data.shift(); floodChart.update('none'); }
     }
 
-    async function sendDiscordRich(status, depth, color) {
+    async function sendDiscordPremium(st, dp, cl, pr, ic) {
         const url = document.getElementById('discord').value;
         if (!url || !url.startsWith('http')) return;
-        const d = { th: { title: "🌊 รายงานระดับน้ำ", fieldStatus: "สถานะ", fieldDepth: "ความลึก" }, en: { title: "🌊 Water Level Report", fieldStatus: "Status", fieldDepth: "Depth" } }[currentLang];
-        const body = { embeds: [{ title: d.title, color: color, fields: [{ name: d.fieldStatus, value: `**${status}**`, inline: true }, { name: d.fieldDepth, value: `**${depth.toFixed(1)} CM**`, inline: true }], timestamp: new Date().toISOString() }] };
-        fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) }).catch(e=>{});
+        const d = dict[currentLang];
+        const body = {
+            username: "HydroGuard Bot",
+            avatar_url: "https://cdn-icons-png.flaticon.com/512/3105/3105807.png",
+            embeds: [{
+                title: d.dis_title,
+                description: `⚠️ **${d.dis_sub}**\n[${d.dis_link}](https://google.com)`,
+                color: cl,
+                thumbnail: { url: "https://cdn-icons-png.flaticon.com/512/564/564619.png" },
+                fields: [
+                    { name: d.dis_status, value: `**${d.dis_lvl}:** ${ic} ${st}\n**${d.dis_pri}:** ${ic} ${pr}`, inline: false },
+                    { name: d.dis_now, value: `\`\`\`ansi\n\u001b[1;34m ${dp.toFixed(2)} cm\n\`\`\``, inline: true },
+                    { name: d.dis_inst, value: `\`\`\`ansi\n\u001b[1;30m ${installHeight.toFixed(2)} cm\n\`\`\``, inline: true },
+                    { name: d.dis_anal, value: `| *${d.dis_footer}*`, inline: false }
+                ],
+                footer: { text: `NODE-ID: ESP32-PRO-V1 • ${new Date().toLocaleTimeString('th-TH')} • วันนี้ เวลา ${new Date().getHours()}:${new Date().getMinutes()}`, icon_url: "https://cdn-icons-png.flaticon.com/512/2995/2995657.png" }
+            }]
+        };
+        fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        const btn = document.getElementById('muteBtn');
+        if (isMuted) {
+            btn.innerText = dict[currentLang].audio_off;
+            btn.classList.add('muted');
+            if(client.connected) client.publish('flood/cmd/mute', '1');
+        } else {
+            btn.innerText = dict[currentLang].audio_on;
+            btn.classList.remove('muted');
+            if(client.connected) client.publish('flood/cmd/mute', '0');
+        }
     }
 
     function setLang(lang) {
-        currentLang = lang;
-        localStorage.setItem('pref_lang', lang);
+        currentLang = lang; localStorage.setItem('pref_lang', lang);
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-' + lang).classList.add('active');
         const d = dict[lang];
         document.getElementById('main-title').innerText = d.title;
         document.getElementById('sub-title').innerText = d.subtitle;
+        document.getElementById('lbl-settings').innerText = d.settings;
         document.getElementById('lbl-calib-title').innerText = d.calib_t;
         document.getElementById('btn-calib-txt').innerText = d.btn_calib;
         document.getElementById('lbl-thresholds').innerText = d.thresholds;
@@ -288,19 +262,30 @@
         document.getElementById('btn-save-txt').innerText = d.btn_save;
         document.getElementById('btn-reset-txt').innerText = d.btn_reset;
         document.getElementById('lbl-depth').innerText = d.depth;
+        document.getElementById('lbl-unit-cm').innerText = d.unit_cm;
         document.getElementById('lbl-status').innerText = d.status;
         document.getElementById('lbl-raw').innerText = d.raw;
-        document.getElementById('calib-msg').innerText = d.calib_msg;
         document.getElementById('ai_wait').innerText = d.wait;
+        document.getElementById('calib-msg').innerText = d.calib_msg;
         document.getElementById('muteBtn').innerText = isMuted ? d.audio_off : d.audio_on;
+        document.getElementById('sync-base').innerText = installHeight > 0 ? d.sync_ok : d.sync_wait;
         updateStatusText();
+    }
+
+    function saveSettings() {
+        const h = document.getElementById('base_h').value;
+        const cfg = { h, w: document.getElementById('th_w').value, a: document.getElementById('th_a').value, c: document.getElementById('th_c').value, u: document.getElementById('discord').value };
+        localStorage.setItem('flood_cfg_intl', JSON.stringify(cfg));
+        installHeight = parseFloat(h);
+        if(client.connected) client.publish('flood/cmd/set_base', h.toString());
+        Swal.fire({ icon: 'success', title: currentLang === 'th' ? 'บันทึกสำเร็จ' : 'Saved!', background: '#161c2e', color: '#fff', timer: 1000, showConfirmButton: false });
     }
 
     function initChart() {
         const ctx = document.getElementById('floodChart').getContext('2d');
         floodChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: Array(20).fill(''), datasets: [{ label: 'Depth', data: Array(20).fill(0), borderColor: '#00d2ff', backgroundColor: 'rgba(0, 210, 255, 0.1)', fill: true, tension: 0.4 }] },
+            data: { labels: Array(30).fill(''), datasets: [{ label: 'Depth CM', data: Array(30).fill(0), borderColor: '#00d2ff', backgroundColor: 'rgba(0, 210, 255, 0.05)', fill: true, tension: 0.4 }] },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true }, x: { display: false } }, plugins: { legend: { display: false } } }
         });
     }
@@ -316,20 +301,11 @@
     }
 
     function startCalib() { document.getElementById('calibOverlay').style.display = 'flex'; isCalib = true; samples = []; client.publish('flood/cmd/setup', '1'); }
-
-    function factoryReset() { Swal.fire({ title: currentLang==='th'?'รีเซ็ต?':'RESET?', icon: 'warning', showCancelButton: true, background: '#161c2e', color: '#fff' }).then(r => { if(r.isConfirmed) { localStorage.clear(); location.reload(); }}); }
+    function finalizeCalib() { isCalib = false; document.getElementById('calibOverlay').style.display = 'none'; samples.sort((a,b) => a-b); const median = samples[Math.floor(samples.length/2)]; document.getElementById('base_h').value = median.toFixed(1); saveSettings(); }
+    function factoryReset() { localStorage.clear(); location.reload(); }
 
     setInterval(updateStatusText, 4000);
-    window.onload = () => {
-        initChart(); setLang(localStorage.getItem('pref_lang') || 'th');
-        const saved = localStorage.getItem('flood_cfg_intl');
-        if(saved) {
-            const c = JSON.parse(saved);
-            document.getElementById('base_h').value = c.h; document.getElementById('th_w').value = c.w;
-            document.getElementById('th_a').value = c.a; document.getElementById('th_c').value = c.c;
-            document.getElementById('discord').value = c.u; installHeight = parseFloat(c.h);
-        }
-    };
+    window.onload = () => { initChart(); setLang(localStorage.getItem('pref_lang') || 'th'); const saved = JSON.parse(localStorage.getItem('flood_cfg_intl') || '{}'); if(saved.h) { installHeight = parseFloat(saved.h); document.getElementById('base_h').value = saved.h; document.getElementById('th_w').value = saved.w; document.getElementById('th_a').value = saved.a; document.getElementById('th_c').value = saved.c; document.getElementById('discord').value = saved.u; } };
 </script>
 </body>
 </html>
