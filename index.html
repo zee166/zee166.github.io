@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HydroGuard | Premium Analysis Dashboard</title>
+    <title>HydroGuard | Dashboard</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -192,10 +192,28 @@
         let curSt = "", clr = 3066993, pri = "LOW", p_icon = "🟢";
 
         // Logic Hysteresis +0.5 cm
-        if(d >= (parseFloat(cfg.c) + 0.5)) { curSt = dict[currentLang].danger_st; statusEl.style.color = "var(--danger)"; clr = 15158332; pri = dict[currentLang].pri_high; p_icon = "🔴"; }
-        else if(d >= (parseFloat(cfg.a) + 0.5)) { curSt = dict[currentLang].alert_st; statusEl.style.color = "var(--warn)"; clr = 15105570; pri = dict[currentLang].pri_med; p_icon = "🟠"; }
-        else if(d >= (parseFloat(cfg.w) + 0.5)) { curSt = dict[currentLang].warn_st; statusEl.style.color = "var(--accent)"; clr = 3447003; pri = dict[currentLang].pri_med; p_icon = "🟡"; }
-        else { curSt = dict[currentLang].safe; statusEl.style.color = "var(--safe)"; clr = 3066993; pri = dict[currentLang].pri_low; p_icon = "🟢"; }
+        if(d >= (parseFloat(cfg.c) + 0.5)) { 
+            curSt = dict[currentLang].danger_st; 
+            statusEl.style.color = "var(--danger)"; clr = 15158332; pri = dict[currentLang].pri_high; p_icon = "🔴";
+            // ดังระดับวิกฤตเท่านั้น
+            if(!isMuted && client.connected) client.publish('flood/cmd/mute', '0'); 
+        }
+        else if(d >= (parseFloat(cfg.a) + 0.5)) { 
+            curSt = dict[currentLang].alert_st; 
+            statusEl.style.color = "var(--warn)"; clr = 15105570; pri = dict[currentLang].pri_med; p_icon = "🟠";
+            // ต่ำกว่าวิกฤตให้เงียบ
+            if(client.connected) client.publish('flood/cmd/mute', '1');
+        }
+        else if(d >= (parseFloat(cfg.w) + 0.5)) { 
+            curSt = dict[currentLang].warn_st; 
+            statusEl.style.color = "var(--accent)"; clr = 3447003; pri = dict[currentLang].pri_med; p_icon = "🟡";
+            if(client.connected) client.publish('flood/cmd/mute', '1');
+        }
+        else { 
+            curSt = dict[currentLang].safe; 
+            statusEl.style.color = "var(--safe)"; clr = 3066993; pri = dict[currentLang].pri_low; p_icon = "🟢";
+            if(client.connected) client.publish('flood/cmd/mute', '1');
+        }
         
         statusEl.innerText = curSt;
 
@@ -236,11 +254,17 @@
         if (isMuted) {
             btn.innerText = dict[currentLang].audio_off;
             btn.classList.add('muted');
+            // ส่งคำสั่งปิดเสียงทันที
             if(client.connected) client.publish('flood/cmd/mute', '1');
         } else {
             btn.innerText = dict[currentLang].audio_on;
             btn.classList.remove('muted');
-            if(client.connected) client.publish('flood/cmd/mute', '0');
+            // ถ้าไม่ Mute และเป็นระดับวิกฤต ให้เปิดเสียง
+            const currentDepth = parseFloat(document.getElementById('depth_v').innerText);
+            const cfg = JSON.parse(localStorage.getItem('flood_cfg_intl') || '{"c":100}');
+            if(currentDepth >= (parseFloat(cfg.c) + 0.5)) {
+                if(client.connected) client.publish('flood/cmd/mute', '0');
+            }
         }
     }
 
